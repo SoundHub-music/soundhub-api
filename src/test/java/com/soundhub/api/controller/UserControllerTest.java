@@ -1,5 +1,6 @@
 package com.soundhub.api.controller;
 
+import com.soundhub.api.BaseTest;
 import com.soundhub.api.dto.UserCompatibilityDto;
 import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.request.CompatibleUsersRequest;
@@ -10,13 +11,11 @@ import com.soundhub.api.service.RecommendationService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
 import lombok.extern.slf4j.Slf4j;
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.*;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -27,14 +26,16 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class UserControllerTest {
+public class UserControllerTest extends BaseTest {
 
     @Mock
     private UserService userService;
@@ -48,17 +49,11 @@ public class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
-    private UUID userId;
-    private User mockUser;
-    private UserDto userDtoMock;
-
-
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-
         userId = UUID.randomUUID();
-        mockUser = User.builder()
+        user = User.builder()
                 .id(userId)
                 .email("vasya.pupkin@gmail.com")
                 .password("testPassword")
@@ -67,7 +62,7 @@ public class UserControllerTest {
                 .birthday(LocalDate.of(2000, 5, 15))
                 .build();
 
-        userDtoMock = UserDto.builder()
+        userDto = UserDto.builder()
                 .id(userId)
                 .email("vasya.pupkin@gmail.com")
                 .password("testPassword")
@@ -80,16 +75,16 @@ public class UserControllerTest {
     @Test
     public void testGetUser_returnUserDto() {
         log.debug("testGetUser_returnUserDto[1]: start test");
-        when(userService.getUserById(userId)).thenReturn(mockUser);
-        when(userMapper.userToUserDto(mockUser)).thenReturn(userDtoMock);
+        when(userService.getUserById(userId)).thenReturn(user);
+        when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
         ResponseEntity<UserDto> response = userController.getUser(userId);
         log.debug("testGetUser_returnUserDto[2]: response: {}", response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userDtoMock, response.getBody());
+        assertEquals(userDto, response.getBody());
 
         verify(userService, times(1)).getUserById(userId);
-        verify(userMapper, times(1)).userToUserDto(mockUser);
+        verify(userMapper, times(1)).userToUserDto(user);
     }
 
     @Test
@@ -110,42 +105,42 @@ public class UserControllerTest {
     public void testUpdateUserWithFile_returnUpdatedUser() throws IOException {
         log.debug("testUpdateUser_returnUpdatedUser[1]: start test");
         MultipartFile file = mock(MultipartFile.class);
-        when(userService.updateUser(eq(userId), eq(userDtoMock), eq(file))).thenReturn(userDtoMock);
+        when(userService.updateUser(eq(userId), eq(userDto), eq(file))).thenReturn(userDto);
 
-        ResponseEntity<UserDto> response = userController.updateUser(userId, userDtoMock, file);
+        ResponseEntity<UserDto> response = userController.updateUser(userId, userDto, file);
         log.debug("testUpdateUserWithFile_returnUpdatedUser[2]: response: {}", response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userDtoMock, response.getBody());
+        assertEquals(userDto, response.getBody());
 
-        verify(userService, times(1)).updateUser(eq(userId), eq(userDtoMock), eq(file));
+        verify(userService, times(1)).updateUser(eq(userId), eq(userDto), eq(file));
     }
 
     @Test
     public void testUpdateUserWithFile_returnUserNotFound() throws IOException {
         log.debug("testUpdateUserWithFile_returnUserNotFound[1]: start test");
         MultipartFile file = mock(MultipartFile.class);
-        when(userService.updateUser(eq(userId), eq(userDtoMock), eq(file))).thenThrow(new ResourceNotFoundException("User", "id", userId));
+        when(userService.updateUser(eq(userId), eq(userDto), eq(file))).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
         assertThrows(ResourceNotFoundException.class, () -> {
-            ResponseEntity<UserDto> response = userController.updateUser(userId, userDtoMock, file);
+            ResponseEntity<UserDto> response = userController.updateUser(userId, userDto, file);
             log.debug("testUpdateUserWithFile_returnUserNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
         });
-        verify(userService, times(1)).updateUser(eq(userId), eq(userDtoMock), eq(file));
+        verify(userService, times(1)).updateUser(eq(userId), eq(userDto), eq(file));
     }
 
     @Test
     public void testUpdateUserWithoutFile_returnUpdatedUser() throws IOException {
         log.debug("testUpdateUserWithoutFile_returnUpdatedUser[1]: start test");
-        when(userService.updateUser(eq(userId), eq(userDtoMock), isNull())).thenReturn(userDtoMock);
+        when(userService.updateUser(eq(userId), eq(userDto), isNull())).thenReturn(userDto);
 
-        ResponseEntity<UserDto> response = userController.updateUser(userId, userDtoMock, null);
+        ResponseEntity<UserDto> response = userController.updateUser(userId, userDto, null);
         log.debug("testUpdateUserWithoutFile_returnUpdatedUser[2]: response: {}", response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(userDtoMock, response.getBody());
+        assertEquals(userDto, response.getBody());
 
-        verify(userService, times(1)).updateUser(eq(userId), eq(userDtoMock), isNull());
+        verify(userService, times(1)).updateUser(eq(userId), eq(userDto), isNull());
     }
 
     @Test
@@ -178,39 +173,39 @@ public class UserControllerTest {
     @Test
     public void testGetCurrentUser_returnCurrentUser() {
         log.debug("testGetCurrentUser_returnCurrentUser[1]: start test");
-        when(userService.getCurrentUser()).thenReturn(mockUser);
+        when(userService.getCurrentUser()).thenReturn(user);
 
         ResponseEntity<User> response = userController.getCurrentUser();
         log.debug("testGetCurrentUser_returnCurrentUser[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockUser, response.getBody());
+        assertEquals(user, response.getBody());
         verify(userService, times(1)).getCurrentUser();
     }
 
     @Test
     public void testAddFriend() throws IOException {
         log.debug("testAddFriend[1]: start test");
-        when(userService.addFriend(userId)).thenReturn(mockUser);
+        when(userService.addFriend(userId)).thenReturn(user);
 
         ResponseEntity<User> response = userController.addFriend(userId);
         log.debug("testAddFriend[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockUser, response.getBody());
+        assertEquals(user, response.getBody());
         verify(userService, times(1)).addFriend(userId);
     }
 
     @Test
     public void testDeleteFriend() throws IOException {
         log.debug("testDeleteFriend[1]: start test");
-        when(userService.deleteFriend(userId)).thenReturn(mockUser);
+        when(userService.deleteFriend(userId)).thenReturn(user);
 
         ResponseEntity<User> response = userController.deleteFriend(userId);
         log.debug("testDeleteFriend[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockUser, response.getBody());
+        assertEquals(user, response.getBody());
         verify(userService, times(1)).deleteFriend(userId);
     }
 
@@ -218,16 +213,16 @@ public class UserControllerTest {
     public void testGetRecommendedFriends() {
         log.debug("testGetRecommendedFriends[1]: start test");
         List<User> rawFriends = new ArrayList<>();
-        rawFriends.add(mockUser);
-        mockUser.setFriends(List.of(mockUser));
+        rawFriends.add(user);
+        user.setFriends(List.of(user));
         List<UUID> ids = List.of(userId);
 
-        when(userService.getCurrentUser()).thenReturn(mockUser);
+        when(userService.getCurrentUser()).thenReturn(user);
         when(recommendationService.getUsers(userId)).thenReturn(ids);
         when(userService.getUsersByIds(ids)).thenReturn(rawFriends);
 
         ResponseEntity<List<User>> response = userController.getRecommendedFriends();
-        log.debug("testGetRecommendedFriends[2]: response: {}", response);
+        log.debug("testGetRecommendedFriends[2]: response: {}", response.getBody());
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().isEmpty());
@@ -239,7 +234,7 @@ public class UserControllerTest {
     @Test
     public void testGetUserFriendsById() {
         log.debug("testGetUserFriendsById[1]: start test");
-        List<User> friends = List.of(mockUser);
+        List<User> friends = List.of(user);
 
         when(userService.getUserFriendsById(userId)).thenReturn(friends);
 
@@ -254,7 +249,7 @@ public class UserControllerTest {
     @Test
     public void testSearchUsersByFullName() {
         log.debug("testSearchUsersByFullName[1]: start test");
-        List<User> users = List.of(mockUser);
+        List<User> users = List.of(user);
 
         when(userService.searchByFullName("John")).thenReturn(users);
 
@@ -269,13 +264,13 @@ public class UserControllerTest {
     @Test
     public void testToggleUserOnline() {
         log.debug("testToggleUserOnline[1]: start test");
-        when(userService.toggleUserOnline()).thenReturn(mockUser);
+        when(userService.toggleUserOnline()).thenReturn(user);
 
         ResponseEntity<User> response = userController.toggleUserOnline();
         log.debug("testToggleUserOnline[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockUser, response.getBody());
+        assertEquals(user, response.getBody());
         verify(userService, times(1)).toggleUserOnline();
     }
 
@@ -285,7 +280,7 @@ public class UserControllerTest {
         List<UUID> userIds = List.of(userId);
         CompatibleUsersResponse compatibleUsersResponse = CompatibleUsersResponse.builder()
                 .userCompatibilities(List.of(UserCompatibilityDto.builder()
-                        .user(mockUser)
+                        .user(user)
                         .compatibility(95.5f)
                         .build())).build();
 
@@ -335,7 +330,7 @@ public class UserControllerTest {
         log.debug("testGetRecommendedFriendsNotFound[1]: start test");
         when(userService.getCurrentUser()).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
+        assertThrows(ResourceNotFoundException.class, () -> {
             ResponseEntity<List<User>> response = userController.getRecommendedFriends();
             log.debug("testGetRecommendedFriendsNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -348,7 +343,7 @@ public class UserControllerTest {
     @Test
     public void testGetUserFriendsByIdNotFound() {
         log.debug("testGetUserFriendsByIdNotFound[1]: start test");
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
+        assertThrows(ResourceNotFoundException.class, () -> {
             when(userService.getUserFriendsById(userId)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
             ResponseEntity<List<User>> response = userController.getUserFriendsById(userId);
@@ -376,7 +371,7 @@ public class UserControllerTest {
     @Test
     public void testToggleUserOnlineNotFound() {
         log.debug("testToggleUserOnlineNotFound[1]: start test");
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
+        assertThrows(ResourceNotFoundException.class, () -> {
             when(userService.toggleUserOnline()).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
             ResponseEntity<User> response = userController.toggleUserOnline();
@@ -392,7 +387,7 @@ public class UserControllerTest {
     public void testFindCompatibilityPercentageNotFound() {
         log.debug("testFindCompatibilityPercentageNotFound[1]: start test");
         List<UUID> userIds = List.of(userId);
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
+        assertThrows(ResourceNotFoundException.class, () -> {
             when(userService.findCompatibilityPercentage(userIds)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
             ResponseEntity<CompatibleUsersResponse> response = userController.findCompatibilityPercentage(CompatibleUsersRequest.builder()

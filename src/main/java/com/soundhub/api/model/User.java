@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -79,7 +80,8 @@ public class User implements UserDetails {
     private String description;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> languages;
+    @Builder.Default
+    private List<String> languages = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -87,7 +89,8 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "friend_id"))
     @JsonIgnore
-    private List<User> friends;
+    @Builder.Default
+    private List<User> friends = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -95,10 +98,12 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
-    private List<Genre> favoriteGenres;
+    @Builder.Default
+    private List<Genre> favoriteGenres = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<Integer> favoriteArtistsIds;
+    @Builder.Default
+    private List<Integer> favoriteArtistsIds = new ArrayList<>();
 
     @Column(name = "role")
     @Enumerated(value = EnumType.STRING)

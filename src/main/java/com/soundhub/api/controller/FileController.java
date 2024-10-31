@@ -2,6 +2,7 @@ package com.soundhub.api.controller;
 
 import com.soundhub.api.service.FileService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,16 +17,21 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/files")
+@Slf4j
 public class FileController {
     @Autowired
     private FileService fileService;
 
     @Value("${project.staticFolder}")
-    private String staticFolder;
+    private String staticFolder = "static/";
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFileHandler(@RequestPart MultipartFile file) throws IOException {
+        log.debug("uploadFileHandler[1]: received file is {}", file.getOriginalFilename());
+
         String fileName = fileService.uploadFile(staticFolder, file);
+        log.debug("uploadFileHandler[2]: received file is {}", staticFolder);
+
         return ResponseEntity.ok("File was uploaded: " + fileName);
     }
 

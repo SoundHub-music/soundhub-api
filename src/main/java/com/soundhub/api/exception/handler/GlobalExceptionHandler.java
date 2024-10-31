@@ -1,12 +1,14 @@
 package com.soundhub.api.exception.handler;
 
 import com.soundhub.api.exception.*;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+
+import java.net.ConnectException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -14,6 +16,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ProblemDetail handleUserAlreadyExistsException(UserAlreadyExistsException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(HttpServerErrorException.class)
+    public ProblemDetail handleHttpServerErrorException(HttpServerErrorException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    @ExceptionHandler(ConnectException.class)
+    public ProblemDetail handleConnectException(ConnectException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.GATEWAY_TIMEOUT, e.getMessage());
     }
 
     @ExceptionHandler(InvalidEmailOrPasswordException.class)

@@ -1,15 +1,13 @@
 package com.soundhub.api.service;
 
+import com.soundhub.api.BaseTest;
 import com.soundhub.api.dto.PostDto;
-import com.soundhub.api.enums.Role;
 import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.Post;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.PostRepository;
-import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.impl.PostServiceImpl;
 import com.soundhub.api.util.mappers.PostMapper;
-import com.soundhub.api.util.mappers.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PostServiceTest {
+public class PostServiceTest extends BaseTest {
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -36,16 +33,7 @@ public class PostServiceTest {
     private PostRepository postRepository;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private UserService userService;
-
-    @Mock
-    private FileService fileService;
-
-    @Mock
-    private UserMapper userMapper;
 
     @Mock
     private PostMapper postMapper;
@@ -54,23 +42,14 @@ public class PostServiceTest {
     private UUID authorId;
     private PostDto postDto;
     private Post post;
-    private User user;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         postId = UUID.randomUUID();
         authorId = UUID.randomUUID();
-
-        user = User.builder()
-                .id(authorId)
-                .email("vasya.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Vasya")
-                .lastName("Pupkin")
-                .birthday(LocalDate.of(2000, 5, 15))
-                .role(Role.ROLE_USER)
-                .build();
+        initUser();
+        user.setId(authorId);
 
         postDto = PostDto.builder()
                 .id(postId)

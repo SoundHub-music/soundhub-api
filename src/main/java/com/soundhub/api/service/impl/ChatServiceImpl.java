@@ -37,7 +37,7 @@ public class ChatServiceImpl implements ChatService {
                     Chat newChat = Chat.builder()
                             .createdBy(sender)
                             .isGroup(false)
-                            .participants(List.of(sender, recipient))
+                            .participants(new ArrayList<>(List.of(sender, recipient)))
                             .build();
                     return chatRepository.save(newChat);
                 });
@@ -73,14 +73,17 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public Chat addUserToGroup(UUID chatId, UUID userId) throws ResourceNotFoundException {
+    public Chat addUserToGroup(UUID chatId, UUID userId) throws ResourceNotFoundException, ApiException {
         log.info("addUserToGroup[1]: adding user with id: {} to chat group", userId);
         Chat chat = getChatById(chatId);
         User chatOwner = userService.getCurrentUser();
 
-        if (chatOwner.equals(chat.getCreatedBy())) {
+        if (chatOwner != null && chatOwner.equals(chat.getCreatedBy())) {
             User user = userService.getUserById(userId);
-            chat.getParticipants().add(user);
+            List<User> participants = new ArrayList<>(chat.getParticipants());
+            participants.add(user);
+
+            chat.setParticipants(participants);
             chatRepository.save(chat);
         } else {
             log.error("addUserToGroup[1]: error");
@@ -98,7 +101,10 @@ public class ChatServiceImpl implements ChatService {
 
         if (chatOwner.equals(chat.getCreatedBy())) {
             User user = userService.getUserById(userId);
-            chat.getParticipants().remove(user);
+            List<User> participants = new ArrayList<>(chat.getParticipants());
+            participants.remove(user);
+            chat.setParticipants(participants);
+
             chatRepository.save(chat);
         } else {
             log.error("removeFromGroup[1]: error");

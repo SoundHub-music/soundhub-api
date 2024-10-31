@@ -1,23 +1,17 @@
 package com.soundhub.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.soundhub.api.BaseTest;
 import com.soundhub.api.dto.PostDto;
-import com.soundhub.api.enums.Role;
 import com.soundhub.api.model.Post;
-import com.soundhub.api.model.User;
 import com.soundhub.api.security.JwtService;
 import com.soundhub.api.service.PostService;
 import com.soundhub.api.service.UserService;
-import com.soundhub.api.util.mappers.PostMapper;
 import lombok.extern.slf4j.Slf4j;
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-
-import static org.mockito.Mockito.*;
-
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +21,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -35,36 +28,31 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @Slf4j
-public class PostControllerTest {
+public class PostControllerTest extends BaseTest {
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private JwtService jwtService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockBean
     private PostService postService;
-
-    @MockBean
-    private PostMapper postMapper;
 
     @MockBean
     private UserService userService;
@@ -77,28 +65,17 @@ public class PostControllerTest {
     private PostDto postDto;
     private PostDto postDtoUpd;
     private Post post;
-    private User user;
     private String jwtToken;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         this.mockMvc = MockMvcBuilders.standaloneSetup(postController).build();
+        initUser();
 
         postId = UUID.randomUUID();
         authorId = UUID.randomUUID();
 
-//        User mockUser = Mockito.mock(User.class);
-
-        user = User.builder()
-                .id(authorId)
-                .email("vasya.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Vasya")
-                .lastName("Pupkin")
-                .birthday(LocalDate.of(2000, 5, 15))
-                .role(Role.ROLE_USER)
-                .build();
 
         postDto = PostDto.builder()
                 .id(postId)
@@ -190,13 +167,12 @@ public class PostControllerTest {
 
         MockMultipartHttpServletRequestBuilder builder =
                 MockMvcRequestBuilders.multipart("/api/v1/posts/update/{postId}", postId);
-        builder.with(new RequestPostProcessor() {
-            @Override
-            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest request) {
-                request.setMethod("PUT");
-                return request;
-            }
+
+        builder.with(request -> {
+            request.setMethod("PUT");
+            return request;
         });
+
         MvcResult mvcResult = mockMvc.perform(builder
                         .file(postDtoFile)
                         .file(image1)

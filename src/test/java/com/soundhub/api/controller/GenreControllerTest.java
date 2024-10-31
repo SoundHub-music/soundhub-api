@@ -2,10 +2,8 @@ package com.soundhub.api.controller;
 
 import com.soundhub.api.model.Genre;
 import com.soundhub.api.model.User;
-import com.soundhub.api.repository.GenreRepository;
 import com.soundhub.api.security.JwtService;
 import com.soundhub.api.service.GenreService;
-import com.soundhub.api.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,12 +40,6 @@ public class GenreControllerTest {
 
     @Autowired
     private JwtService jwtService;
-
-    @MockBean
-    private GenreRepository genreRepository;
-
-    @MockBean
-    private UserService userService;
 
     @MockBean
     private GenreService genreService;
@@ -92,8 +85,7 @@ public class GenreControllerTest {
         List<Genre> genreList = List.of(rock, pop, metal);
         when(genreService.getAllGenres()).thenReturn(genreList);
 
-        MvcResult result = mockMvc.perform(get("/api/v1/genres")
-                        .header("Authorization", "Bearer " + jwtToken))
+        MvcResult result = mockMvc.perform(get("/api/v1/genres"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(rock.getId().toString()))
                 .andExpect(jsonPath("$[1].id").value(pop.getId().toString()))
@@ -102,6 +94,20 @@ public class GenreControllerTest {
 
         log.debug("testGetAllGenres[1]: response result = {}", result.getResponse().getContentAsString());
 
+        verify(genreService, times(1)).getAllGenres();
+    }
+
+    @Test
+    public void testGetEmptyGenres() throws Exception {
+        when(genreService.getAllGenres()).thenReturn(new ArrayList<>());
+
+        MvcResult result = mockMvc.perform(get("/api/v1/genres"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0))
+                .andReturn();
+
+        log.debug("testGetEmptyGenres[2]: response result = {}", result.getResponse().getContentAsString());
         verify(genreService, times(1)).getAllGenres();
     }
 }

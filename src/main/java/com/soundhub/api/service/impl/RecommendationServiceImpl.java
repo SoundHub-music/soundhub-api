@@ -26,6 +26,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         log.info("recommendUsers[1]: searching friends for user with id: {}", user);
         final String uri = recommendationApi + "/" + user;
         RestTemplate restTemplate = new RestTemplate();
+
         List<UUID> result = restTemplate.getForObject(uri, List.class);
         return result;
     }

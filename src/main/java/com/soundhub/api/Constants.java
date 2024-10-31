@@ -20,8 +20,11 @@ public class Constants {
     public static final String USERNAME_NOT_FOUND = "User not found with this username or email: %s";
     public static final String SUCCESSFUL_LOGOUT = "You have successfully logged out";
     public static final String INVALID_EMAIL_PASSWORD = "Invalid email or password";
+    public static final String INVALID_MULTIPART = "Invalid multipart file";
+    public static final String CREATE_STATIC_DIR_ERROR = "Couldn't create folder %s";
+    public static final String SAVE_STATIC_ERROR = "Error during saving file";
     public static final String FILE_ALREADY_EXISTS = "This file already exist! Please enter another file name.";
-    public static final String FILE_NOT_FOUND = "File %s doesn't exist";
+    public static final String FILE_NOT_FOUND = "File %s";
     public static final String RESOURCE_NOT_EXIST = "Resource %s not found";
     public static final String PERMISSION_MESSAGE = "You don't have permissions for this operation.";
     public static final String CHAT_DELETE_SUCCESS_MSG = "Chat with id: %s was successfully deleted";
@@ -54,8 +57,4 @@ public class Constants {
     public static final String USER_DTO_SIGN_UP_ID = "userData";
     public static final String FILE_REQUEST_PART_ID = "files";
     public static final String DELETE_FILE_LIST_REQUEST_PART_ID = "deleteFiles";
-
-    public static final String PYTHON = "python3.8";
-    public static final String PATH_TO_PYTHON_SCRIPT = "src/main/resources/recommend.py";
-    public static final String PATH_TO_PYTHON_API = "http://localhost:8888/recommend/";
 }

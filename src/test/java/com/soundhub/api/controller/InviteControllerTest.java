@@ -1,11 +1,10 @@
 package com.soundhub.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.soundhub.api.BaseTest;
 import com.soundhub.api.enums.InviteStatus;
 import com.soundhub.api.enums.Role;
 import com.soundhub.api.model.Invite;
 import com.soundhub.api.model.User;
-import com.soundhub.api.repository.InviteRepository;
 import com.soundhub.api.security.JwtService;
 import com.soundhub.api.service.InviteService;
 import com.soundhub.api.service.UserService;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,7 +32,6 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,18 +41,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Slf4j
-public class InviteControllerTest {
+public class InviteControllerTest extends BaseTest {
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private JwtService jwtService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
-    private InviteRepository inviteRepository;
 
     @MockBean
     private UserService userService;
@@ -80,8 +71,6 @@ public class InviteControllerTest {
 
         senderId = UUID.randomUUID();
         recipientId = UUID.randomUUID();
-
-        User mockUser = Mockito.mock(User.class);
 
         sender = User.builder()
                 .id(senderId)

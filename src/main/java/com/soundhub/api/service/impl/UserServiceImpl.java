@@ -11,8 +11,6 @@ import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.FileService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,14 +36,14 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Autowired
     private UserMapper userMapper;
 
-    @Value("${project.avatar}")
-    private String avatarFolderName;
+    private final String avatarFolderName;
+
+    public UserServiceImpl(@Value("${project.avatar:avatars}") String avatarFolderName) {
+        this.avatarFolderName = Objects.requireNonNullElse(avatarFolderName, "avatars/");
+    }
 
     @Override
     public User addUser(UserDto userDto, MultipartFile file) throws IOException {
@@ -72,7 +70,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User addFriend(UUID friendId) throws IOException {
+    public User addFriend(UUID friendId) {
         User user = getCurrentUser();
         User newFriend = getUserById(friendId);
 
@@ -229,8 +227,9 @@ public class UserServiceImpl implements UserService {
         User userCompareTo = getCurrentUser();
         List<User> usersCompareWith = getUsersByIds(listUsersCompareWith);
         HashMap<User, Float> listUsersPercent = new HashMap<>();
+
         usersCompareWith.forEach(userCompareWith -> {
-            List<Integer> artistsCompareTo = userCompareTo.getFavoriteArtistsIds();
+            List<Integer> artistsCompareTo = new ArrayList<>(userCompareTo.getFavoriteArtistsIds());
             List<Integer> artistsCompareToCopy = new ArrayList<>(artistsCompareTo);
             List<Integer> artistsCompareWith = userCompareWith.getFavoriteArtistsIds();
 

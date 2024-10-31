@@ -1,6 +1,7 @@
 package com.soundhub.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.soundhub.api.BaseTest;
 import com.soundhub.api.Constants;
 import com.soundhub.api.dto.SignInDto;
 import com.soundhub.api.dto.SignUpDto;
@@ -8,13 +9,7 @@ import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.request.RefreshTokenRequest;
 import com.soundhub.api.dto.response.AuthResponse;
 import com.soundhub.api.dto.response.LogoutResponse;
-import com.soundhub.api.enums.Role;
-import com.soundhub.api.model.User;
 import com.soundhub.api.security.AuthenticationService;
-import com.soundhub.api.security.BlacklistingService;
-import com.soundhub.api.security.JwtService;
-import com.soundhub.api.security.RefreshTokenService;
-import com.soundhub.api.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,20 +44,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Slf4j
-public class AuthControllerTest {
+public class AuthControllerTest extends BaseTest {
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private JwtService jwtService;
-    @MockBean
-    private UserService userService;
-    @MockBean
-    private BlacklistingService blacklistingService;
-    @MockBean
-    private RefreshTokenService refreshTokenService;
-    @MockBean
-    private AuthenticationManager authenticationManager;
 
     @MockBean
     private AuthenticationService authenticationService;
@@ -71,29 +54,20 @@ public class AuthControllerTest {
     @InjectMocks
     private AuthController authController;
 
-    private User user;
     private UserDto userDto;
     private SignUpDto signUpDto;
     private SignInDto signInDto;
     private AuthResponse authResponse;
     private LogoutResponse logoutResponse;
-    private String accessToken, refreshToken;
+    private String refreshToken;
     private RefreshTokenRequest refreshTokenRequest;
 
     @BeforeEach
     public void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
         this.mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
-
-        user = User.builder()
-                .id(UUID.randomUUID())
-                .email("vasya.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Vasya")
-                .lastName("Pupkin")
-                .birthday(LocalDate.of(2000, 5, 15))
-                .role(Role.ROLE_USER)
-                .build();
+        initUser();
+        generateAccessToken(user);
 
         userDto = UserDto.builder()
                 .id(UUID.randomUUID())
@@ -118,7 +92,6 @@ public class AuthControllerTest {
                 .password("testPassword")
                 .build();
 
-        accessToken = jwtService.generateToken(user);
         refreshToken = UUID.randomUUID().toString();
         log.debug("setUp[1]: access&refresh token: {} , {}", accessToken, refreshToken);
 
@@ -176,12 +149,11 @@ public class AuthControllerTest {
 
     @Test
     void testLogout() throws Exception {
-        String authHeader = "Bearer " + accessToken;
 
-        when(authenticationService.logout(authHeader)).thenReturn(logoutResponse);
+        when(authenticationService.logout(bearerToken)).thenReturn(logoutResponse);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/auth/logout")
-                        .header("Authorization", authHeader))
+                        .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(logoutResponse.getMessage()))
                 .andReturn();

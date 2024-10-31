@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.soundhub</groupId>
 	<artifactId>api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>soundhub-api</name>
 	<description>Backend for SoundHub android app</description>
 	<properties>

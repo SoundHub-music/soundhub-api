@@ -16,49 +16,73 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
 @Slf4j
 public class FileServiceImpl implements FileService {
-    @Value("${project.resources.path}")
-    private String resourcesPath;
+    private final String resourcesPath;
+    private final String staticFolder;
 
-    @Value("${project.staticFolder}")
-    private String staticFolder;
+    public FileServiceImpl(
+        @Value("${project.resources.path}")
+        String resourcesPath,
+        @Value("${project.staticFolder}")
+        String staticFolder
+    ) {
+        this.resourcesPath = resourcesPath;
+        this.staticFolder = staticFolder;
+    }
+
+    private void createFolderIfNotExists(File folder) throws ApiException {
+        if (!folder.exists()) {
+            boolean isFolderCreated = folder.mkdir();
+
+            if (!isFolderCreated) {
+                throw new ApiException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        String.format(Constants.CREATE_STATIC_DIR_ERROR, folder)
+                );
+            }
+        }
+    }
 
     @Override
     public String uploadFile(String path, MultipartFile multipartFile) throws IOException {
+        log.debug("uploadFile[1]: multipart file is {}", multipartFile);
+        if (multipartFile == null || multipartFile.isEmpty() || path == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, Constants.INVALID_MULTIPART);
+        }
+
         String fileName = multipartFile.getOriginalFilename();
 
         String uuidFilename = UUID.randomUUID() + "_" + fileName;
         File fileFolder = getStaticPath(path).toFile();
+        File staticResourcesPath = Paths.get(resourcesPath, staticFolder).toFile();
+
+        if (Objects.equals(path, staticFolder)) {
+            fileFolder = staticResourcesPath;
+        }
 
         Path filePath = Paths.get(fileFolder.getAbsolutePath(), uuidFilename);
-        File staticResourcesPath = Paths.get(resourcesPath, staticFolder).toFile();
-        boolean isFolderCreated;
+        log.debug("uploadFile[1]: resources path: {}", resourcesPath);
+        log.debug("uploadFile[2]: static folder: {}", staticFolder);
 
-        if (!staticResourcesPath.exists()) {
-            isFolderCreated = staticResourcesPath.mkdir();
-
-            if (!isFolderCreated) {
-                throw new IOException("Could not create folder " + staticResourcesPath);
-            }
-        }
-
-        if (!fileFolder.exists()) {
-            isFolderCreated = fileFolder.mkdir();
-
-            if (!isFolderCreated) {
-                throw new IOException("Could not create folder " + fileFolder);
-            }
-        }
+        createFolderIfNotExists(staticResourcesPath);
+        createFolderIfNotExists(fileFolder);
 
         log.debug("uploadFile[1]: {}", resourcesPath);
         log.debug("uploadFile[2]: {}", fileFolder);
 
-        Files.copy(multipartFile.getInputStream(), filePath);
-        return uuidFilename;
+        try {
+            Files.copy(multipartFile.getInputStream(), filePath);
+
+            return uuidFilename;
+        }
+        catch (IOException e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, Constants.SAVE_STATIC_ERROR);
+        }
     }
 
     @Override
@@ -92,6 +116,8 @@ public class FileServiceImpl implements FileService {
     public Path getStaticFilePath(String folder, String filename) {
         File staticFile = getStaticPath(folder)
                 .toFile();
+
+        log.debug("getStaticFilePath[1]: {}", staticFile.getAbsolutePath());
 
         if (!staticFile.exists())
             throw new ResourceNotFoundException(String.format(Constants.FILE_NOT_FOUND, staticFile.getName()));
