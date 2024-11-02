@@ -6,7 +6,7 @@ RUN pip install pipenv
 
 WORKDIR /app
 
-COPY target/api-0.0.1-SNAPSHOT.jar /app/app.jar
+COPY target/api-1.0.0.jar /app/app.jar
 
 COPY recommendationApi /app/recommendationApi
 
