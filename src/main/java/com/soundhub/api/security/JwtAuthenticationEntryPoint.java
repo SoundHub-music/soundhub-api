@@ -1,7 +1,6 @@
 package com.soundhub.api.security;
 
 import com.soundhub.api.Constants;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +14,9 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+        int responseStatus = response.getStatus();
         log.error("Responding with unauthorized error. Message - {}", authException.getMessage());
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, Constants.UNAUTHORIZED_ERROR_MESSAGE);
+        response.sendError(responseStatus, Constants.UNAUTHORIZED_ERROR_MESSAGE);
     }
 }
