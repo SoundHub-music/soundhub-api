@@ -9,6 +9,7 @@ import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.FileService;
+import com.soundhub.api.service.RecommendationService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private RecommendationService recommendationService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -86,7 +90,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User deleteFriend(UUID friendId) throws IOException {
+    public User deleteFriend(UUID friendId) {
         User user = getCurrentUser();
         User delFriend = userRepository.findById(friendId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -153,7 +157,6 @@ public class UserServiceImpl implements UserService {
 
         userMapper.updateUserFromDto(userDto, user);
         user.setAvatarUrl(fileName);
-
         userRepository.save(user);
 
         return userMapper.userToUserDto(user);
@@ -223,32 +226,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<User> getRecommendedFriends() {
+        User currentUser = getCurrentUser();
+        List<User> potentialFriends = new ArrayList<>();
+        List<UUID> ids = recommendationService.getUsers(currentUser.getId());
+        List<User> rawFriends = getUsersByIds(ids);
+
+        rawFriends.forEach(friend -> {
+            if (!currentUser.getFriends().contains(friend)) {
+                potentialFriends.add(friend);
+            }
+        });
+
+        return potentialFriends;
+    }
+
+    @Override
     public CompatibleUsersResponse findCompatibilityPercentage(List<UUID> listUsersCompareWith) {
         User userCompareTo = getCurrentUser();
         List<User> usersCompareWith = getUsersByIds(listUsersCompareWith);
         HashMap<User, Float> listUsersPercent = new HashMap<>();
 
         usersCompareWith.forEach(userCompareWith -> {
-            List<Integer> artistsCompareTo = new ArrayList<>(userCompareTo.getFavoriteArtistsIds());
-            List<Integer> artistsCompareToCopy = new ArrayList<>(artistsCompareTo);
-            List<Integer> artistsCompareWith = userCompareWith.getFavoriteArtistsIds();
-
-            log.debug("findCompatibilityPercentage[1]: artists of userCompareTo: {} and copy {}, artists of userCompareWith {} {}", artistsCompareTo, artistsCompareToCopy, userCompareWith.getId(), artistsCompareWith);
-            artistsCompareTo.retainAll(artistsCompareWith);
-            log.debug("findCompatibilityPercentage[2]: artists in both lists: {}", artistsCompareTo);
-
-            Set<Integer> artistsTotal = new HashSet<>() {{
-                addAll(artistsCompareWith);
-                addAll(artistsCompareToCopy);
-            }};
-            log.debug("findCompatibilityPercentage[3]: all artists list: {}", artistsCompareToCopy);
-            float compatibility = 0;
-            if (!artistsTotal.isEmpty()) {
-                compatibility = (((float) artistsCompareTo.size() / (float) artistsTotal.size()) * 100);
-            }
-
+            float compatibility = calculateCompatibilityForUser(userCompareWith, userCompareTo);
             listUsersPercent.put(userCompareWith, compatibility);
         });
+
         log.debug("findCompatibilityPercentage[4]: list (userCompareWith: percent): {}", listUsersPercent);
 
         List<UserCompatibilityDto> userCompatibilityList = new ArrayList<>();
@@ -262,5 +265,34 @@ public class UserServiceImpl implements UserService {
         });
 
         return new CompatibleUsersResponse(userCompatibilityList);
+    }
+
+    private float calculateCompatibilityForUser(User userCompareWith, User userCompareTo) {
+        List<Integer> artistsCompareTo = new ArrayList<>(userCompareTo.getFavoriteArtistsIds());
+        List<Integer> artistsCompareToCopy = new ArrayList<>(artistsCompareTo);
+        List<Integer> artistsCompareWith = userCompareWith.getFavoriteArtistsIds();
+        log.debug(
+                "calculateCompatibilityForUser[1]: artists of userCompareTo: {} and copy {}, artists of userCompareWith {} {}",
+                artistsCompareTo,
+                artistsCompareToCopy,
+                userCompareWith.getId(),
+                artistsCompareWith
+        );
+
+        artistsCompareTo.retainAll(artistsCompareWith);
+        log.debug("calculateCompatibilityForUser[2]: artists in both lists: {}", artistsCompareTo);
+
+        Set<Integer> artistsTotal = new HashSet<>() {{
+            addAll(artistsCompareWith);
+            addAll(artistsCompareToCopy);
+        }};
+
+        log.debug("calculateCompatibilityForUser[3]: all artists list: {}", artistsCompareToCopy);
+
+        if (!artistsTotal.isEmpty()) {
+            return (((float) artistsCompareTo.size() / (float) artistsTotal.size()) * 100);
+        }
+
+        return 0;
     }
 }

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -211,24 +212,40 @@ public class UserControllerTest extends BaseTest {
 
     @Test
     public void testGetRecommendedFriends() {
-        log.debug("testGetRecommendedFriends[1]: start test");
-        List<User> rawFriends = new ArrayList<>();
-        rawFriends.add(user);
-        user.setFriends(List.of(user));
-        List<UUID> ids = List.of(userId);
+        User currentUser = User.builder()
+                .id(UUID.randomUUID())
+                .favoriteArtistsIds(List.of(1, 2, 3))
+                .build();
 
-        when(userService.getCurrentUser()).thenReturn(user);
-        when(recommendationService.getUsers(userId)).thenReturn(ids);
-        when(userService.getUsersByIds(ids)).thenReturn(rawFriends);
+        User potentialFriend = User.builder()
+                .id(UUID.randomUUID())
+                .favoriteArtistsIds(List.of(2, 5, 7, 1))
+                .build();
+
+        List<User> rawFriends = List.of(potentialFriend);
+
+        when(userService.getCurrentUser()).thenReturn(currentUser);
+        when(userService.getRecommendedFriends()).thenReturn(rawFriends);
+
+        User currentUserActual = userService.getCurrentUser();
+        List<Integer> recommendedUserArtistIds = rawFriends.stream()
+                .flatMap(u -> u.getFavoriteArtistsIds().stream())
+                .toList();
+
+        List<Integer> intersectionArtistIds = currentUserActual
+                .getFavoriteArtistsIds()
+                .stream()
+                .filter(recommendedUserArtistIds::contains)
+                .toList();
 
         ResponseEntity<List<User>> response = userController.getRecommendedFriends();
-        log.debug("testGetRecommendedFriends[2]: response: {}", response.getBody());
+        log.debug("testGetRecommendedFriends[1]: response: {}", response.getBody());
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody().isEmpty());
-        verify(userService, times(1)).getCurrentUser();
-        verify(recommendationService, times(1)).getUsers(userId);
-        verify(userService, times(1)).getUsersByIds(ids);
+        assertFalse(intersectionArtistIds.isEmpty());
+        assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
+
+        verify(userService, times(1)).getRecommendedFriends();
     }
 
     @Test
@@ -327,17 +344,15 @@ public class UserControllerTest extends BaseTest {
 
     @Test
     public void testGetRecommendedFriendsNotFound() throws Exception {
-        log.debug("testGetRecommendedFriendsNotFound[1]: start test");
-        when(userService.getCurrentUser()).thenThrow(new ResourceNotFoundException("User", "id", userId));
+        List<User> empty = new ArrayList<>();
+        when(userService.getRecommendedFriends()).thenReturn(empty);
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            ResponseEntity<List<User>> response = userController.getRecommendedFriends();
-            log.debug("testGetRecommendedFriendsNotFound[2]: response: {}", response);
-            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-            assertNull(response.getBody());
-        });
+        ResponseEntity<List<User>> response = userController.getRecommendedFriends();
+        log.debug("testGetRecommendedFriendsNotFound[1]: response: {}", response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody()).isEmpty());
 
-        verify(userService, times(1)).getCurrentUser();
+        verify(userService, times(1)).getRecommendedFriends();
     }
 
     @Test

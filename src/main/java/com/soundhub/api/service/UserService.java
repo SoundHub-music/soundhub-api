@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
-    //    User addUser(User user);
     User addUser(UserDto userDto, MultipartFile file) throws IOException;
 
     User addFriend(UUID friendId) throws IOException;
@@ -38,6 +37,8 @@ public interface UserService {
     List<User> searchByFullName(String name);
 
     User toggleUserOnline();
+
+    List<User> getRecommendedFriends();
 
     CompatibleUsersResponse findCompatibilityPercentage(List<UUID> listUsersCompareWith);
 }
