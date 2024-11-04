@@ -32,7 +32,7 @@ public class UserController {
     private RecommendationService recommendationService;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUser(@PathVariable  UUID userId) {
+    public ResponseEntity<UserDto> getUser(@PathVariable UUID userId) {
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(userMapper.userToUserDto(user), HttpStatus.OK);
     }
@@ -42,8 +42,8 @@ public class UserController {
             @PathVariable UUID userId,
             @RequestPart UserDto userDto,
             @RequestPart(
-                required = false,
-                name = Constants.FILE_REQUEST_PART_ID
+                    required = false,
+                    name = Constants.FILE_REQUEST_PART_ID
             ) MultipartFile file
     ) throws IOException {
         return ResponseEntity.ok(userService.updateUser(userId, userDto, file));
@@ -55,9 +55,9 @@ public class UserController {
     }
 
     @GetMapping("/currentUser")
-    public ResponseEntity<User> getCurrentUser() {
+    public ResponseEntity<UserDto> getCurrentUser() {
         User currentUser = userService.getCurrentUser();
-        return new ResponseEntity<>(currentUser, HttpStatus.OK);
+        return new ResponseEntity<>(userMapper.userToUserDto(currentUser), HttpStatus.OK);
     }
 
     @PutMapping("/addFriend/{friendId}")

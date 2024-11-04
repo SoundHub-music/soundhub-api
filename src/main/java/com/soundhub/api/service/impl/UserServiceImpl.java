@@ -27,6 +27,8 @@ import java.util.*;
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
+    private final String avatarFolderName;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -38,8 +40,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
-
-    private final String avatarFolderName;
 
     public UserServiceImpl(@Value("${project.avatar:avatars}") String avatarFolderName) {
         this.avatarFolderName = Objects.requireNonNullElse(avatarFolderName, "avatars/");
@@ -108,51 +108,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        Constants.USER_RESOURCE_NAME, Constants.EMAIL_FIELD, email)
-                );
-    }
-
-    @Override
-    public User getCurrentUser() {
-        var username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        return getUserByEmail(username);
-    }
-
-    @Override
-    public List<User> getUsersByIds(List<UUID> ids) {
-        return userRepository.findByUserIds(ids);
-    }
-
-    @Override
-    public List<User> getUserFriendsById(UUID id) {
-        log.info("getUserFriendsById[1]: getting user's: {} friends", id);
-        User user = getUserById(id);
-        log.info("getUserFriendsById[2]: user: {}", user);
-        log.info("getUserFriendsById[3]: user's friends: {}", user.getFriends());
-        return user.getFriends();
-    }
-
-    @Override
-    public List<User> searchByFullName(String name) {
-        log.info("searchByFullName[1]: searching users with name: {}", name);
-        if (name.contains(" ")) {
-            String[] parts = name.split("\\s+");
-            String firstName = parts[0];
-            String lastName = parts.length > 1 ? parts[1] : "";
-
-            return userRepository.findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCase(firstName, lastName);
-        } else {
-            return userRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(name, name);
-        }
-    }
-
-    @Override
     public UUID deleteUser(UUID userId) throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -205,8 +160,53 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<User> getUsersByIds(List<UUID> ids) {
+        return userRepository.findByUserIds(ids);
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        Constants.USER_RESOURCE_NAME, Constants.EMAIL_FIELD, email)
+                );
+    }
+
+    @Override
     public Boolean checkEmailAvailability(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public User getCurrentUser() {
+        var username = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return getUserByEmail(username);
+    }
+
+    @Override
+    public List<User> getUserFriendsById(UUID id) {
+        log.info("getUserFriendsById[1]: getting user's: {} friends", id);
+        User user = getUserById(id);
+        log.info("getUserFriendsById[2]: user: {}", user);
+        log.info("getUserFriendsById[3]: user's friends: {}", user.getFriends());
+        return user.getFriends();
+    }
+
+    @Override
+    public List<User> searchByFullName(String name) {
+        log.info("searchByFullName[1]: searching users with name: {}", name);
+        if (name.contains(" ")) {
+            String[] parts = name.split("\\s+");
+            String firstName = parts[0];
+            String lastName = parts.length > 1 ? parts[1] : "";
+
+            return userRepository.findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCase(firstName, lastName);
+        } else {
+            return userRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(name, name);
+        }
     }
 
     @Override

@@ -175,11 +175,11 @@ public class UserControllerTest extends BaseTest {
         log.debug("testGetCurrentUser_returnCurrentUser[1]: start test");
         when(userService.getCurrentUser()).thenReturn(user);
 
-        ResponseEntity<User> response = userController.getCurrentUser();
+        ResponseEntity<UserDto> response = userController.getCurrentUser();
         log.debug("testGetCurrentUser_returnCurrentUser[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(user, response.getBody());
+        assertEquals(userMapper.userToUserDto(user), response.getBody());
         verify(userService, times(1)).getCurrentUser();
     }
 
