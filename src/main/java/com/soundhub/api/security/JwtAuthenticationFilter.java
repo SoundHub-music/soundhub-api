@@ -2,7 +2,6 @@ package com.soundhub.api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soundhub.api.Constants;
-import jakarta.annotation.Nullable;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,116 +19,115 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerExecutionChain;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final List<String> PUBLIC_ENDPOINTS = List.of("/api/v1/auth", "/api/v1/genres", "/swagger-ui", "/v3/api-docs", "/ws");
     private final JwtService jwtService;
     private final BlacklistingService blacklistingService;
     private final UserDetailsService userDetailsService;
-    private final RequestMappingHandlerMapping requestMappingHandlerMapping;
 
+    /**
+     * Main filter method to process incoming requests and handle JWT authentication.
+     */
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        // Check if the route exists
-        if (!isRouteExists(request)) {
-            sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid request path");
-            return;
-        }
-
-        // Validate the Authorization header
-        String authHeader = request.getHeader(Constants.AUTHORIZATION_HEADER_NAME);
-        if (!isAuthHeaderValid(authHeader)) {
+        if (isPermittedEndpoint(request)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String jwt = extractTokenFromHeader(authHeader);
-
-        // Check if the token is blacklisted
-        try {
-            if (isTokenBlacklisted(jwt)) {
-                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token is blacklisted");
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-        }
-        catch (RedisConnectionFailureException e) {
-            log.error("isTokenBlacklisted: Redis connection failure", e);
-            sendErrorResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
-            filterChain.doFilter(request, response);
+        String jwt = extractTokenFromHeader(request.getHeader(Constants.AUTHORIZATION_HEADER_NAME));
+        if (isTokenInvalid(jwt, response)) {
             return;
         }
 
-        // Validate and authenticate the token
         authenticateJwtToken(jwt, request, response);
-
-        // Continue with the filter chain
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Authenticates JWT token and sets the authentication in the security context if valid.
+     */
     private void authenticateJwtToken(String jwt, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String username;
         try {
-            username = jwtService.extractUsername(jwt);
-            log.debug("Authenticating user: {}", username);
-
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
+            String username = jwtService.extractUsername(jwt);
+            if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+                return;
             }
-        }
-        catch (Exception e) {
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        } catch (Exception e) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication error");
         }
     }
 
-    private boolean isAuthHeaderValid(@Nullable String authHeader) {
-        return authHeader != null && authHeader.startsWith(Constants.BEARER_PREFIX);
-    }
-
+    /**
+     * Extracts the JWT token from the Authorization header.
+     */
     private String extractTokenFromHeader(String header) {
-        return header.substring(Constants.BEARER_PREFIX.length());
+        if (header != null && header.startsWith(Constants.BEARER_PREFIX)) {
+            return header.substring(Constants.BEARER_PREFIX.length());
+        }
+        return null;
     }
 
+    /**
+     * Checks if the token is null or blacklisted, and sends an error response if invalid.
+     */
+    private boolean isTokenInvalid(String jwt, HttpServletResponse response) throws IOException {
+        try {
+            if (jwt == null || isTokenBlacklisted(jwt)) {
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+                return true;
+            }
+        } catch (RedisConnectionFailureException e) {
+            sendErrorResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Redis connection failure");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the endpoint does not require authentication.
+     */
+    private boolean isPermittedEndpoint(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return PUBLIC_ENDPOINTS.stream().anyMatch(uri::startsWith);
+    }
+
+    /**
+     * Checks if the token is blacklisted in Redis.
+     */
     private boolean isTokenBlacklisted(String jwt) throws RedisConnectionFailureException {
         return blacklistingService.getJwtBlacklist(jwt) != null;
     }
 
-    private boolean isRouteExists(HttpServletRequest request) {
-        try {
-            HandlerExecutionChain handlerChain = requestMappingHandlerMapping.getHandler(request);
-            return handlerChain != null;
-        } catch (Exception e) {
-            log.error("Error while checking route existence", e);
-            return false;
-        }
-    }
-
+    /**
+     * Sends an error response in JSON format.
+     */
     private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
         ProblemDetail errorResponse = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(status), message);
-        ObjectMapper mapper = new ObjectMapper();
         PrintWriter writer = response.getWriter();
-
         response.setStatus(status);
-        writer.write(mapper.writeValueAsString(errorResponse));
+        writer.write(MAPPER.writeValueAsString(errorResponse));
         writer.flush();
     }
 }
