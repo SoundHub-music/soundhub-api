@@ -29,7 +29,7 @@ public class PostDto {
 
     @JsonFormat(pattern = Constants.LOCAL_DATETIME_FORMAT)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
-    private LocalDateTime publishDate;
+    private LocalDateTime createdAt;
 
     @NotBlank
     private String content;

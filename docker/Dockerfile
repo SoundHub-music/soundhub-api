@@ -6,18 +6,17 @@ RUN pip install pipenv
 
 WORKDIR /app
 
-COPY target/api-1.0.0.jar /app/app.jar
+COPY target/api-*.jar /app/app.jar
 
 COPY recommendationApi /app/recommendationApi
 
-COPY docker/application.properties /app/resources/application.properties
+COPY src/main/resources/application.properties /app/resources/application.properties
+COPY src/main/resources/db/ /app/resources/db/
 
 WORKDIR /app/recommendationApi
 RUN pipenv install --system --deploy
 
 WORKDIR /app
-
-EXPOSE 8080 8888
 
 COPY docker/.env /app/.env
 COPY docker/.env /app/recommendationApi/.env
@@ -25,4 +24,5 @@ COPY docker/.env /app/recommendationApi/.env
 COPY docker/start_server.sh /app/start_server.sh
 RUN chmod +x /app/start_server.sh
 
+EXPOSE 8080 8888
 ENTRYPOINT ["/app/start_server.sh"]

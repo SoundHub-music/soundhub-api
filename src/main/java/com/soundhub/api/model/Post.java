@@ -1,43 +1,24 @@
 package com.soundhub.api.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.soundhub.api.Constants;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UuidGenerator;
+import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "posts")
-@Builder
-public class Post {
-    @Id
-    @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
-    private UUID id;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User author;
-
-    @Column(name = "publishDate")
-    @JsonFormat(pattern = Constants.LOCAL_DATETIME_FORMAT)
-    private LocalDateTime publishDate;
-
-    @Column(name = "content")
-    private String content;
-
+@SuperBuilder
+public class Post extends ContentEntity {
     @ElementCollection
     private List<String> images;
 

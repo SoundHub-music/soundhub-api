@@ -45,10 +45,10 @@ public class MessageServiceImpl implements MessageService {
 
         Message message = Message.builder()
                 .chat(chat)
-                .sender(user)
+                .author(user)
                 .content(request.getContent())
                 .replyToMessageId(request.getReplyToMessageId())
-                .timestamp(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .isRead(false)
                 .build();
 
@@ -57,12 +57,12 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Page<Message> findPagedMessagesByChatId(
-        UUID chatId,
-        User reqUser,
-        int page,
-        int size,
-        String sort,
-        String order
+            UUID chatId,
+            User reqUser,
+            int page,
+            int size,
+            String sort,
+            String order
     ) {
         Chat chat = chatService.getChatById(chatId);
         int adjustedPage = (page > 0) ? page - 1 : 0;
@@ -104,7 +104,7 @@ public class MessageServiceImpl implements MessageService {
         chats.forEach(chat -> {
             List<Message> chatMessages = findAllMessagesByChatId(chat.getId())
                     .stream()
-                    .filter(msg -> msg.getSender().getId() != currentUserId && !msg.getIsRead())
+                    .filter(msg -> msg.getAuthor().getId() != currentUserId && !msg.getIsRead())
                     .toList();
 
             unreadMessages.addAll(chatMessages);
@@ -127,7 +127,7 @@ public class MessageServiceImpl implements MessageService {
     public UUID deleteMessageById(UUID messageId, User reqUser) {
         Message message = findMessageById(messageId);
 
-        if (message.getSender().getId().equals(reqUser.getId())) {
+        if (message.getAuthor().getId().equals(reqUser.getId())) {
             messageRepository.deleteById(message.getId());
         } else {
             throw new ApiException(HttpStatus.FORBIDDEN, Constants.PERMISSION_MESSAGE);
@@ -139,7 +139,7 @@ public class MessageServiceImpl implements MessageService {
     public Message changeMessage(UUID messageId, String newContent, User reqUser) {
         Message message = findMessageById(messageId);
 
-        if (message.getSender().getId().equals(reqUser.getId())) {
+        if (message.getAuthor().getId().equals(reqUser.getId())) {
             message.setContent(newContent);
             messageRepository.save(message);
         } else {

@@ -62,7 +62,7 @@ public class PostServiceImpl implements PostService {
 
         Post post = Post.builder()
                 .author(author)
-                .publishDate(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .content(postDto.getContent())
                 .images(postImageUrl)
                 .build();

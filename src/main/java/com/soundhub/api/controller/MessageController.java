@@ -46,10 +46,10 @@ public class MessageController {
                         .id(savedMessage.getId())
                         .chatId(savedMessage.getChat().getId())
                         .replyToMessageId(savedMessage.getReplyToMessageId())
-                        .senderId(savedMessage.getSender().getId())
+                        .senderId(savedMessage.getAuthor().getId())
                         .content(savedMessage.getContent())
                         .build()
-                );
+        );
     }
 
     @MessageMapping("/message/read/{messageId}")
@@ -72,15 +72,15 @@ public class MessageController {
 
     @GetMapping("/chat/{chatId}")
     public ResponseEntity<Page<Message>> getChatMessages(
-        @PathVariable UUID chatId,
-        @RequestParam(defaultValue = Constants.DEFAULT_MESSAGE_PAGE) int page,
-        @RequestParam(defaultValue = Constants.DEFAULT_MESSAGE_PAGE_SIZE) int size,
-        @RequestParam(defaultValue = "timestamp") String sort,
-        @RequestParam(defaultValue = "desc") String order
+            @PathVariable UUID chatId,
+            @RequestParam(defaultValue = Constants.DEFAULT_MESSAGE_PAGE) int page,
+            @RequestParam(defaultValue = Constants.DEFAULT_MESSAGE_PAGE_SIZE) int size,
+            @RequestParam(defaultValue = "timestamp") String sort,
+            @RequestParam(defaultValue = "desc") String order
     ) {
         User currentUser = userService.getCurrentUser();
         Page<Message> chatMessages = messageService.findPagedMessagesByChatId(
-            chatId, currentUser, page, size, sort, order
+                chatId, currentUser, page, size, sort, order
         );
 
         log.debug("[1] MessageController[getChatMessages] -> current user: {}", currentUser);
