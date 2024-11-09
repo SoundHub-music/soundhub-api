@@ -75,7 +75,7 @@ public class MessageController {
             @PathVariable UUID chatId,
             @RequestParam(defaultValue = Constants.DEFAULT_MESSAGE_PAGE) int page,
             @RequestParam(defaultValue = Constants.DEFAULT_MESSAGE_PAGE_SIZE) int size,
-            @RequestParam(defaultValue = "timestamp") String sort,
+            @RequestParam(defaultValue = "createdAt") String sort,
             @RequestParam(defaultValue = "desc") String order
     ) {
         User currentUser = userService.getCurrentUser();
