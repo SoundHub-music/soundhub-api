@@ -79,7 +79,7 @@ public class InviteControllerTest extends BaseTest {
                 .firstName("Vasya")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2000, 5, 15))
-                .role(Role.ROLE_USER)
+                .role(Role.USER)
                 .build();
 
         recipient = User.builder()
@@ -89,7 +89,7 @@ public class InviteControllerTest extends BaseTest {
                 .firstName("Petya")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2002, 12, 15))
-                .role(Role.ROLE_USER)
+                .role(Role.USER)
                 .build();
 
         inviteConsidered = Invite.builder()

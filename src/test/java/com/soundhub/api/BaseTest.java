@@ -21,19 +21,16 @@ import static org.mockito.Mockito.mock;
         "project.staticFolder=static/"
 })
 public class BaseTest {
+    protected final String fileFolder = "uploads";
     protected UUID chatId;
     protected UUID anotherChatId;
     protected UUID userId;
     protected UUID anotherUserId;
-
     protected User user;
     protected User anotherUser;
     protected UserDto userDto;
-
     protected Chat anotherChat;
     protected Chat chat;
-    protected final String fileFolder = "uploads";
-
     @Value("${project.resources.path}")
     protected String resourcesPath;
 
@@ -75,7 +72,7 @@ public class BaseTest {
                 .firstName("Vasya")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2000, 5, 15))
-                .role(Role.ROLE_USER)
+                .role(Role.USER)
                 .build();
 
         anotherUser = User.builder()
@@ -85,7 +82,7 @@ public class BaseTest {
                 .firstName("Oleg")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2005, 5, 15))
-                .role(Role.ROLE_USER)
+                .role(Role.USER)
                 .build();
     }
 

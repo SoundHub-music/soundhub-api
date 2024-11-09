@@ -108,7 +108,7 @@ public class User implements UserDetails {
     @Column(name = "role")
     @Enumerated(value = EnumType.STRING)
     @JsonIgnore
-    private Role role = Role.ROLE_USER;
+    private Role role = Role.USER;
 
     @OneToOne(mappedBy = "user")
     @JsonIgnore
@@ -144,14 +144,14 @@ public class User implements UserDetails {
     }
 
     @Override
-    public String getUsername() {
-        return email;
-    }
-
-    @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
     }
 
     @Override

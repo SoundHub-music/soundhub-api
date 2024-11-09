@@ -59,7 +59,7 @@ public class PostControllerPositiveNegativeModuleTest {
                 .firstName("Vasya")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2000, 5, 15))
-                .role(Role.ROLE_USER)
+                .role(Role.USER)
                 .build();
 
         postDto = PostDto.builder()
