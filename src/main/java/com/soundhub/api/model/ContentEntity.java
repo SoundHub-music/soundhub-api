@@ -36,5 +36,6 @@ public class ContentEntity {
     protected User author;
 
     @Column(name = "content")
+    @Lob
     private String content;
 }
