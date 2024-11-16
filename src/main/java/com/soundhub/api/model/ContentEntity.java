@@ -35,7 +35,6 @@ public class ContentEntity {
     @JoinColumn(name = "user_id")
     protected User author;
 
-    @Column(name = "content")
-    @Lob
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 }
