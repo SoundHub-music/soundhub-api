@@ -42,6 +42,9 @@ public class Chat {
     @Column(name = "chat_name")
     private String chatName;
 
+    @Column(name = "total_messages")
+    private Long totalMessages;
+
     @Override
     public String toString() {
         return "Chat{" +

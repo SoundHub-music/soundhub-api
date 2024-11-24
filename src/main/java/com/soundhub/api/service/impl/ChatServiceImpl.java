@@ -134,7 +134,7 @@ public class ChatServiceImpl implements ChatService {
     public UUID deleteChat(UUID chatId) throws ResourceNotFoundException {
         log.info("deleteCHat[1]: deleting chat with id: {}", chatId);
         Chat chat = getChatById(chatId);
-        
+
         if (userService.getCurrentUser().equals(chat.getCreatedBy())) {
             chatRepository.delete(chat);
         } else {
@@ -144,5 +144,11 @@ public class ChatServiceImpl implements ChatService {
         return chat.getId();
     }
 
+    @Override
+    public void updateMessageCount(UUID chatId, long messageCount) {
+        Chat chat = getChatById(chatId);
+        chat.setTotalMessages(messageCount);
 
+        chatRepository.save(chat);
+    }
 }

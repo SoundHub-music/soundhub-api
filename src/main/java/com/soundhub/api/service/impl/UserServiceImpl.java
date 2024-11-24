@@ -149,7 +149,8 @@ public class UserServiceImpl implements UserService {
 
         if (file != null) {
             if (fileName != null) {
-                Files.deleteIfExists(fileService.getStaticFilePath(avatarFolderName, fileName));
+                boolean deleted = Files.deleteIfExists(fileService.getStaticFilePath(avatarFolderName, fileName));
+                log.debug("updateUser[1]: was avatar deleted = {}", deleted);
             }
 
             fileName = fileService.uploadFile(avatarFolderName, file);

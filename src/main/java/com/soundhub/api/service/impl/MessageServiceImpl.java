@@ -52,7 +52,12 @@ public class MessageServiceImpl implements MessageService {
                 .isRead(false)
                 .build();
 
-        return messageRepository.save(message);
+        Message savedMessage = messageRepository.save(message);
+
+        List<Message> messages = findAllMessagesByChatId(chat.getId());
+        chatService.updateMessageCount(chat.getId(), messages.size());
+
+        return savedMessage;
     }
 
     @Override
@@ -91,7 +96,6 @@ public class MessageServiceImpl implements MessageService {
     public List<Message> findAllMessagesByChatId(UUID chatId) {
         return messageRepository.findAllByChat_Id(chatId)
                 .stream()
-                .filter(msg -> msg.getChat().getId() == chatId)
                 .toList();
     }
 

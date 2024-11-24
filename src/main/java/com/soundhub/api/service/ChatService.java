@@ -24,4 +24,6 @@ public interface ChatService {
     Chat renameGroup(UUID chatId, String groupName, User user);
 
     UUID deleteChat(UUID chatId) throws ResourceNotFoundException;
+
+    void updateMessageCount(UUID chatId, long messageCount);
 }
