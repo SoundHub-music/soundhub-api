@@ -4,6 +4,7 @@ import com.soundhub.api.Constants;
 import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.request.CompatibleUsersRequest;
 import com.soundhub.api.dto.response.CompatibleUsersResponse;
+import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.model.User;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
@@ -27,9 +28,16 @@ public class UserController {
     private UserMapper userMapper;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUser(@PathVariable UUID userId) {
+    public ResponseEntity<UserDto> GetUserById(@PathVariable UUID userId) {
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(userMapper.userToUserDto(user), HttpStatus.OK);
+    }
+
+
+    @GetMapping("/checkUser/{email}")
+    public ResponseEntity<UserExistenceResponse> checkEmailAvailability(@PathVariable String email) {
+        UserExistenceResponse response = userService.checkUserExistence(email);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("/update/{userId}")

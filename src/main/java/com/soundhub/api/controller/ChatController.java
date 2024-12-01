@@ -3,7 +3,7 @@ package com.soundhub.api.controller;
 import com.soundhub.api.Constants;
 import com.soundhub.api.dto.request.GroupChatRequest;
 import com.soundhub.api.dto.request.SingleChatRequest;
-import com.soundhub.api.dto.response.ApiResponse;
+import com.soundhub.api.dto.response.ApiStateResponse;
 import com.soundhub.api.model.Chat;
 import com.soundhub.api.model.User;
 import com.soundhub.api.service.ChatService;
@@ -65,9 +65,9 @@ public class ChatController {
     }
 
     @DeleteMapping("/delete/{chatId}")
-    public ResponseEntity<ApiResponse> deleteChat(@PathVariable UUID chatId) {
+    public ResponseEntity<ApiStateResponse> deleteChat(@PathVariable UUID chatId) {
         UUID deletedChatId = chatService.deleteChat(chatId);
-        ApiResponse response = new ApiResponse(true, String.format(Constants.CHAT_DELETE_SUCCESS_MSG, deletedChatId));
+        ApiStateResponse response = new ApiStateResponse(true, String.format(Constants.CHAT_DELETE_SUCCESS_MSG, deletedChatId));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

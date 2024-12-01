@@ -5,6 +5,7 @@ import com.soundhub.api.dto.UserCompatibilityDto;
 import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.request.CompatibleUsersRequest;
 import com.soundhub.api.dto.response.CompatibleUsersResponse;
+import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
 import com.soundhub.api.service.RecommendationService;
@@ -74,12 +75,38 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
+    public void testCheckEmailAvailability_emailExists_returnTrue() {
+        log.debug("testCheckEmailAvailability_emailExists_returnTrue[1]: start test");
+        when(userService.checkUserExistence(user.getEmail())).thenReturn(new UserExistenceResponse(true));
+
+        ResponseEntity<UserExistenceResponse> response = userController.checkEmailAvailability(user.getEmail());
+        log.debug("testCheckEmailAvailability_emailExists_returnTrue[2]: response: {}", response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody()).isUserExists());
+
+        verify(userService, times(1)).checkUserExistence(user.getEmail());
+    }
+
+    @Test
+    public void testCheckEmailAvailability_emailDoesNotExist_returnFalse() {
+        log.debug("testCheckEmailAvailability_emailDoesNotExist_returnFalse[1]: start test");
+        when(userService.checkUserExistence(user.getEmail())).thenReturn(new UserExistenceResponse(false));
+
+        ResponseEntity<UserExistenceResponse> response = userController.checkEmailAvailability(user.getEmail());
+        log.debug("testCheckEmailAvailability_emailDoesNotExist_returnFalse[2]: response: {}", response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertFalse(Objects.requireNonNull(response.getBody()).isUserExists());
+
+        verify(userService, times(1)).checkUserExistence(user.getEmail());
+    }
+
+    @Test
     public void testGetUser_returnUserDto() {
         log.debug("testGetUser_returnUserDto[1]: start test");
         when(userService.getUserById(userId)).thenReturn(user);
         when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
-        ResponseEntity<UserDto> response = userController.getUser(userId);
+        ResponseEntity<UserDto> response = userController.GetUserById(userId);
         log.debug("testGetUser_returnUserDto[2]: response: {}", response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(userDto, response.getBody());
@@ -93,8 +120,8 @@ public class UserControllerTest extends BaseTest {
         log.debug("testGetUser_nonExistentUser_returnNotFound[1]: start test");
         when(userService.getUserById(userId)).thenThrow(new ResourceNotFoundException("user", "userId", userId));
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            ResponseEntity<UserDto> response = userController.getUser(userId);
+        assertThrows(ResourceNotFoundException.class, () -> {
+            ResponseEntity<UserDto> response = userController.GetUserById(userId);
             log.debug("testGetUser_nonExistentUser_returnNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());

@@ -4,6 +4,7 @@ import com.soundhub.api.BaseTest;
 import com.soundhub.api.dto.UserCompatibilityDto;
 import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.response.CompatibleUsersResponse;
+import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.UserRepository;
@@ -39,7 +40,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @TestPropertySource(
-    locations = "classpath:application.properties"
+        locations = "classpath:application.properties"
 )
 public class UserServiceTest extends BaseTest {
     @Mock
@@ -70,6 +71,24 @@ public class UserServiceTest extends BaseTest {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+    }
+
+    @Test
+    public void testCheckUserExistence_userExists_returnTrue() {
+        when(userService.checkEmailAvailability(user.getEmail())).thenReturn(true);
+
+        UserExistenceResponse response = userService.checkUserExistence(user.getEmail());
+
+        assertTrue(response.isUserExists());
+    }
+
+    @Test
+    public void testCheckUserExistence_userDoesNotExist_returnFalse() {
+        when(userService.checkEmailAvailability(user.getEmail())).thenReturn(false);
+
+        UserExistenceResponse response = userService.checkUserExistence(user.getEmail());
+
+        assertFalse(response.isUserExists());
     }
 
     @Test

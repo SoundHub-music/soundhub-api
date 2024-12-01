@@ -4,7 +4,9 @@ import com.soundhub.api.Constants;
 import com.soundhub.api.dto.UserCompatibilityDto;
 import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.response.CompatibleUsersResponse;
+import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.enums.Role;
+import com.soundhub.api.exception.ApiException;
 import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.UserRepository;
@@ -15,6 +17,7 @@ import com.soundhub.api.util.mappers.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -179,6 +182,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean checkEmailAvailability(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public UserExistenceResponse checkUserExistence(String email) {
+        if (!email.matches(Constants.EMAIL_REGEX))
+            throw new ApiException(HttpStatus.BAD_REQUEST, Constants.INVALID_EMAIL);
+
+        boolean isUserExists = checkEmailAvailability(email);
+        return new UserExistenceResponse(isUserExists);
     }
 
     @Override

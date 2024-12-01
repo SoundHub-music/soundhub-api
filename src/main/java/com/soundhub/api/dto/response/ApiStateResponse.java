@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 import java.io.Serializable;
@@ -18,7 +17,7 @@ import java.io.Serializable;
         "success",
         "message"
 })
-public class ApiResponse implements Serializable {
+public class ApiStateResponse implements Serializable {
 
     @JsonProperty("success")
     private Boolean success;
@@ -29,7 +28,7 @@ public class ApiResponse implements Serializable {
     @JsonIgnore
     private HttpStatus httpStatus;
 
-    public ApiResponse(Boolean success, String message) {
+    public ApiStateResponse(Boolean success, String message) {
         this.success = success;
         this.message = message;
     }

@@ -29,7 +29,7 @@ import java.util.List;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final List<String> PUBLIC_ENDPOINTS = List.of("/api/v1/auth", "/api/v1/genres", "/swagger-ui", "/v3/api-docs", "/ws");
+    private static final List<String> PUBLIC_ENDPOINTS = List.of("/api/v1/auth", "/api/v1/users/checkUser", "/api/v1/genres", "/swagger-ui", "/v3/api-docs", "/ws");
     private final JwtService jwtService;
     private final BlacklistingService blacklistingService;
     private final UserDetailsService userDetailsService;
@@ -58,25 +58,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Authenticates JWT token and sets the authentication in the security context if valid.
+     * Checks if the endpoint does not require authentication.
      */
-    private void authenticateJwtToken(String jwt, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            String username = jwtService.extractUsername(jwt);
-            if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
-                return;
-            }
-
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
-        } catch (Exception e) {
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication error");
-        }
+    private boolean isPermittedEndpoint(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return PUBLIC_ENDPOINTS.stream().anyMatch(uri::startsWith);
     }
 
     /**
@@ -106,11 +92,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Checks if the endpoint does not require authentication.
+     * Authenticates JWT token and sets the authentication in the security context if valid.
      */
-    private boolean isPermittedEndpoint(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        return PUBLIC_ENDPOINTS.stream().anyMatch(uri::startsWith);
+    private void authenticateJwtToken(String jwt, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            String username = jwtService.extractUsername(jwt);
+            if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+                return;
+            }
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        } catch (Exception e) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication error");
+        }
     }
 
     /**
