@@ -14,6 +14,7 @@ import com.soundhub.api.service.FileService;
 import com.soundhub.api.service.RecommendationService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -226,13 +227,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User toggleUserOnline() {
+    @Transactional
+    public User updateUserOnline(boolean online) {
         User currentUser = getCurrentUser();
-        currentUser.setOnline(!currentUser.isOnline());
+        boolean currentOnline = currentUser.isOnline();
 
-        if (!currentUser.isOnline())
-            currentUser.setLastOnline(LocalDateTime.now());
-        else currentUser.setLastOnline(null);
+        if (currentOnline == online)
+            return currentUser;
+
+        currentOnline = !currentOnline;
+        currentUser.setOnline(currentOnline);
+        LocalDateTime lastOnline = !currentOnline ? LocalDateTime.now() : null;
+
+        currentUser.setLastOnline(lastOnline);
 
         userRepository.save(currentUser);
         return currentUser;

@@ -206,12 +206,12 @@ public class UserServiceTest extends BaseTest {
     }
 
     @Test
-    public void testToggleUserOnline() {
+    public void testUpdateUserOnline() {
         User result = userService.getCurrentUser();
         assertEquals(user, result);
 
         boolean isOnline = user.isOnline();
-        User toggledUser = userService.toggleUserOnline();
+        User toggledUser = userService.updateUserOnline(!isOnline);
 
         assertNotEquals(isOnline, toggledUser.isOnline());
     }

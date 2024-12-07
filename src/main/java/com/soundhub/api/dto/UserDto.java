@@ -63,7 +63,7 @@ public class UserDto {
     private List<Integer> favoriteArtistsIds;
 
     @NotNull
-    private Boolean isOnline = false;
+    private boolean online = false;
 
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonFormat(pattern = Constants.LOCAL_DATETIME_FORMAT)

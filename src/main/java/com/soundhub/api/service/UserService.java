@@ -39,7 +39,7 @@ public interface UserService {
 
     List<User> searchByFullName(String name);
 
-    User toggleUserOnline();
+    User updateUserOnline(boolean online);
 
     List<User> getRecommendedFriends();
 

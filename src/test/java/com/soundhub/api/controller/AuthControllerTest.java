@@ -76,7 +76,7 @@ public class AuthControllerTest extends BaseTest {
                 .firstName("Vasya")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2000, 5, 15))
-                .isOnline(false)
+                .online(false)
                 .build();
 
         signUpDto = SignUpDto.builder()

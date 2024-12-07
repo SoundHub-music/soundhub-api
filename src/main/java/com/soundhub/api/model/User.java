@@ -116,7 +116,7 @@ public class User implements UserDetails {
 
     @Column(name = "is_online")
     @NotNull
-    private boolean isOnline = false;
+    private boolean online = false;
 
     @Column(name = "last_online")
     @JsonSerialize(using = LocalDateTimeSerializer.class)

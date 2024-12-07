@@ -306,16 +306,16 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void testToggleUserOnline() {
+    public void testUpdateUserOnline() {
         log.debug("testToggleUserOnline[1]: start test");
-        when(userService.toggleUserOnline()).thenReturn(user);
+        when(userService.updateUserOnline(true)).thenReturn(user);
 
-        ResponseEntity<User> response = userController.toggleUserOnline();
+        ResponseEntity<User> response = userController.updateUserOnline(true);
         log.debug("testToggleUserOnline[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(user, response.getBody());
-        verify(userService, times(1)).toggleUserOnline();
+        verify(userService, times(1)).updateUserOnline(true);
     }
 
     @Test
@@ -411,18 +411,18 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void testToggleUserOnlineNotFound() {
+    public void testUpdateUserOnlineNotFound() {
         log.debug("testToggleUserOnlineNotFound[1]: start test");
         assertThrows(ResourceNotFoundException.class, () -> {
-            when(userService.toggleUserOnline()).thenThrow(new ResourceNotFoundException("User", "id", userId));
+            when(userService.updateUserOnline(true)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
-            ResponseEntity<User> response = userController.toggleUserOnline();
+            ResponseEntity<User> response = userController.updateUserOnline(true);
             log.debug("testToggleUserOnlineNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
         });
 
-        verify(userService, times(1)).toggleUserOnline();
+        verify(userService, times(1)).updateUserOnline(true);
     }
 
     @Test

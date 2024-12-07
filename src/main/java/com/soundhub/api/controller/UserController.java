@@ -93,9 +93,9 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-    @PutMapping("/toggleOnline")
-    public ResponseEntity<User> toggleUserOnline() {
-        return new ResponseEntity<>(userService.toggleUserOnline(), HttpStatus.OK);
+    @PutMapping("/user/online")
+    public ResponseEntity<User> updateUserOnline(@RequestParam(name = "value") boolean online) {
+        return new ResponseEntity<>(userService.updateUserOnline(online), HttpStatus.OK);
     }
 
     @PostMapping("/compatibleUsers")
