@@ -20,7 +20,7 @@ import java.util.UUID;
 @SuperBuilder
 @Inheritance(strategy = InheritanceType.JOINED)
 @Entity
-public class ContentEntity {
+public abstract class ContentEntity {
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.TIME)
@@ -36,5 +36,5 @@ public class ContentEntity {
     protected User author;
 
     @Column(name = "content", columnDefinition = "TEXT")
-    private String content;
+    protected String content;
 }
