@@ -4,6 +4,16 @@ public class Constants {
     public static final String EMAIL_REGEX = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
     public static final String HOST_REGEX = "https?:\\/\\/(?:[a-zA-Z0-9.-]+|\\d{1,3}(?:\\.\\d{1,3}){3})(:\\d+)?(?:\\/[^\\s]*)?";
 
+    public static final String[] ENDPOINT_WHITELIST = {
+            "/api/v1/files/**",
+            "/api/v1/auth/**",
+            "/api/v1/users/checkUser/**",
+            "/api/v1/genres",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/ws/**"
+    };
+
     public static final String USER_RESOURCE_NAME = "User";
     public static final String POST_RESOURCE_NAME = "Post";
     public static final String CHAT_RESOURCE_NAME = "Chat";

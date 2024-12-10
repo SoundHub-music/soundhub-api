@@ -1,5 +1,6 @@
 package com.soundhub.api.config;
 
+import com.soundhub.api.Constants;
 import com.soundhub.api.security.JwtAuthenticationEntryPoint;
 import com.soundhub.api.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -41,12 +42,7 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/users/checkUser/**").permitAll()
-                        .requestMatchers("/api/v1/genres/**").permitAll()
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers(Constants.ENDPOINT_WHITELIST).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)

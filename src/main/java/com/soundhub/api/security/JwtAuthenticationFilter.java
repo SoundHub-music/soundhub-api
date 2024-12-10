@@ -22,6 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -29,7 +30,10 @@ import java.util.List;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final List<String> PUBLIC_ENDPOINTS = List.of("/api/v1/auth", "/api/v1/users/checkUser", "/api/v1/genres", "/swagger-ui", "/v3/api-docs", "/ws");
+    private static final List<String> PUBLIC_ENDPOINTS = Arrays.stream(Constants.ENDPOINT_WHITELIST)
+            .map(e -> e.replace("/**", ""))
+            .toList();
+
     private final JwtService jwtService;
     private final BlacklistingService blacklistingService;
     private final UserDetailsService userDetailsService;
@@ -50,6 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = extractTokenFromHeader(request.getHeader(Constants.AUTHORIZATION_HEADER_NAME));
         if (isTokenInvalid(jwt, response)) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
             return;
         }
 
@@ -80,15 +85,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private boolean isTokenInvalid(String jwt, HttpServletResponse response) throws IOException {
         try {
-            if (jwt == null || isTokenBlacklisted(jwt)) {
-                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+            if (jwt == null || isTokenBlacklisted(jwt))
                 return true;
-            }
+
         } catch (RedisConnectionFailureException e) {
             sendErrorResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Redis connection failure");
             return true;
         }
         return false;
+    }
+
+    /**
+     * Sends an error response in JSON format.
+     */
+    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
+        ProblemDetail errorResponse = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(status), message);
+        PrintWriter writer = response.getWriter();
+        response.setStatus(status);
+        writer.write(MAPPER.writeValueAsString(errorResponse));
+        writer.flush();
     }
 
     /**
@@ -118,16 +133,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private boolean isTokenBlacklisted(String jwt) throws RedisConnectionFailureException {
         return blacklistingService.getJwtBlacklist(jwt) != null;
-    }
-
-    /**
-     * Sends an error response in JSON format.
-     */
-    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
-        ProblemDetail errorResponse = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(status), message);
-        PrintWriter writer = response.getWriter();
-        response.setStatus(status);
-        writer.write(MAPPER.writeValueAsString(errorResponse));
-        writer.flush();
     }
 }
