@@ -8,6 +8,7 @@ import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.enums.Role;
 import com.soundhub.api.exception.ApiException;
 import com.soundhub.api.exception.ResourceNotFoundException;
+import com.soundhub.api.model.Genre;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.FileService;
@@ -267,14 +268,33 @@ public class UserServiceImpl implements UserService {
         List<User> usersCompareWith = getUsersByIds(listUsersCompareWith);
         HashMap<User, Float> listUsersPercent = new HashMap<>();
 
+        List<Integer> artistsCompareTo = userCompareTo.getFavoriteArtistsIds();
+        List<UUID> genresCompareTo = userCompareTo.getFavoriteGenres()
+                .stream()
+                .map(Genre::getId).toList();
+
         usersCompareWith.forEach(userCompareWith -> {
-            float compatibility = calculateCompatibilityForUser(userCompareWith, userCompareTo);
-            listUsersPercent.put(userCompareWith, compatibility);
+            List<Integer> artistsCompareWith = userCompareWith.getFavoriteArtistsIds();
+            List<UUID> genresCompareWith = userCompareWith.getFavoriteGenres()
+                    .stream()
+                    .map(Genre::getId).toList();
+
+            float artistCompatibility = calculateCompatibilityForUserBy(artistsCompareWith, artistsCompareTo);
+            float genreCompatibility = calculateCompatibilityForUserBy(genresCompareWith, genresCompareTo);
+
+            float meanCompatibility = (artistCompatibility + genreCompatibility) / 2;
+
+            if (artistCompatibility == 0 || genreCompatibility == 0) {
+                meanCompatibility = Math.max(artistCompatibility, genreCompatibility);
+            }
+
+            listUsersPercent.put(userCompareWith, meanCompatibility);
         });
 
         log.debug("findCompatibilityPercentage[4]: list (userCompareWith: percent): {}", listUsersPercent);
 
         List<UserCompatibilityDto> userCompatibilityList = new ArrayList<>();
+
         listUsersPercent.forEach((user, compatibility) -> {
             UserCompatibilityDto dto = UserCompatibilityDto.builder()
                     .user(user)
@@ -287,32 +307,21 @@ public class UserServiceImpl implements UserService {
         return new CompatibleUsersResponse(userCompatibilityList);
     }
 
-    private float calculateCompatibilityForUser(User userCompareWith, User userCompareTo) {
-        List<Integer> artistsCompareTo = new ArrayList<>(userCompareTo.getFavoriteArtistsIds());
-        List<Integer> artistsCompareToCopy = new ArrayList<>(artistsCompareTo);
-        List<Integer> artistsCompareWith = userCompareWith.getFavoriteArtistsIds();
-        log.debug(
-                "calculateCompatibilityForUser[1]: artists of userCompareTo: {} and copy {}, artists of userCompareWith {} {}",
-                artistsCompareTo,
-                artistsCompareToCopy,
-                userCompareWith.getId(),
-                artistsCompareWith
-        );
 
-        artistsCompareTo.retainAll(artistsCompareWith);
-        log.debug("calculateCompatibilityForUser[2]: artists in both lists: {}", artistsCompareTo);
+    private <T> float calculateCompatibilityForUserBy(List<T> entityCompareWith, List<T> entityCompareTo) {
+        float compatibility = 0;
 
-        Set<Integer> artistsTotal = new HashSet<>() {{
-            addAll(artistsCompareWith);
-            addAll(artistsCompareToCopy);
-        }};
+        if (entityCompareTo.isEmpty() || entityCompareWith.isEmpty())
+            return compatibility;
 
-        log.debug("calculateCompatibilityForUser[3]: all artists list: {}", artistsCompareToCopy);
+        Set<T> intersection = new HashSet<>(entityCompareWith);
+        intersection.retainAll(entityCompareTo);
 
-        if (!artistsTotal.isEmpty()) {
-            return (((float) artistsCompareTo.size() / (float) artistsTotal.size()) * 100);
-        }
+        Set<T> total = new HashSet<>(entityCompareWith);
+        total.addAll(entityCompareTo);
 
-        return 0;
+        compatibility = ((float) intersection.size() / (float) total.size()) * 100;
+
+        return compatibility;
     }
 }
