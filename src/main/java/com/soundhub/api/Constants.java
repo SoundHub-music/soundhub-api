@@ -42,6 +42,7 @@ public class Constants {
     public static final String INVITE_ALREADY_SENT_MSG = "Invitation for this user has already sent";
     public static final String USER_ALREADY_FRIEND = "This user is already a friend";
     public static final String USER_CANNOT_ADD_HIMSELF = "User can't add himself as a friend!";
+    public static final String NO_INVITE_STRATEGY_MESSAGE = "No strategy found for name: %s";
 
     public static final String DEFAULT_MESSAGE_PAGE = "0";
     public static final String DEFAULT_MESSAGE_PAGE_SIZE = "50";

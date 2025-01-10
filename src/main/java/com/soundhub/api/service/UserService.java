@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface UserService {
     User addUser(UserDto userDto, MultipartFile file) throws IOException;
 
-    User addFriend(UUID friendId) throws IOException;
+    User addFriend(UUID friendId);
 
     User deleteFriend(UUID friendId) throws IOException;
 
