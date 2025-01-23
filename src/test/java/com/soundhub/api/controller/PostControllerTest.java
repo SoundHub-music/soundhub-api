@@ -63,7 +63,7 @@ public class PostControllerTest extends BaseTest {
     private UUID postId;
     private UUID authorId;
     private PostDto postDto;
-    private PostDto postDtoUpd;
+    private Post postUpd;
     private Post post;
     private String jwtToken;
 
@@ -83,7 +83,7 @@ public class PostControllerTest extends BaseTest {
                 .content("Test content")
                 .build();
 
-        postDtoUpd = PostDto.builder()
+        postUpd = Post.builder()
                 .id(postId)
                 .author(user)
                 .content("Test content")
@@ -107,7 +107,7 @@ public class PostControllerTest extends BaseTest {
         MockMultipartFile image1 = new MockMultipartFile("files", "image1.jpg", "image/jpeg", "image1 content".getBytes());
         MockMultipartFile image2 = new MockMultipartFile("files", "image2.jpg", "image/jpeg", "image2 content".getBytes());
 
-        Mockito.when(postService.addPost(Mockito.any(PostDto.class), Mockito.anyList())).thenReturn(postDto);
+        Mockito.when(postService.addPost(Mockito.any(PostDto.class), Mockito.anyList())).thenReturn(post);
 
         mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/posts/add")
                         .file(postDtoFile)
@@ -125,7 +125,7 @@ public class PostControllerTest extends BaseTest {
     @Test
     @WithMockUser
     public void testGetPostByIdWithToken() throws Exception {
-        when(postService.getPostById(postId)).thenReturn(postDto);
+        when(postService.getPostById(postId)).thenReturn(post);
 
         mockMvc.perform(get("/api/v1/posts/{postId}", postId)
                         .header("Authorization", jwtToken))
@@ -136,11 +136,11 @@ public class PostControllerTest extends BaseTest {
 
     @Test
     public void testGetPostById() throws Exception {
-        when(postService.getPostById(postId)).thenReturn(postDto);
+        when(postService.getPostById(postId)).thenReturn(post);
 
-        ResponseEntity<PostDto> response = postController.getPostById(postId);
+        ResponseEntity<Post> response = postController.getPostById(postId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(postDto, response.getBody());
+        assertEquals(post, response.getBody());
 
         verify(postService, times(1)).getPostById(postId);
     }
@@ -163,7 +163,7 @@ public class PostControllerTest extends BaseTest {
         MockMultipartFile image1 = new MockMultipartFile("files", "image1.jpg", "image/jpeg", "image1 content".getBytes());
         MockMultipartFile image2 = new MockMultipartFile("files", "image2.jpg", "image/jpeg", "image2 content".getBytes());
 
-        when(postService.updatePost(any(), any(), any(), any())).thenReturn(postDtoUpd);
+        when(postService.updatePost(any(), any(), any(), any())).thenReturn(postUpd);
 
         MockMultipartHttpServletRequestBuilder builder =
                 MockMvcRequestBuilders.multipart("/api/v1/posts/update/{postId}", postId);
@@ -181,7 +181,7 @@ public class PostControllerTest extends BaseTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId.toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content").value(postDtoUpd.getContent()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content").value(postUpd.getContent()))
                 .andReturn();
         log.debug("mvcResult \"{}\"", mvcResult.getResponse().getContentAsString());
     }

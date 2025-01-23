@@ -54,12 +54,14 @@ public class PostServiceTest extends BaseTest {
         postDto = PostDto.builder()
                 .id(postId)
                 .author(user)
+                .images(new ArrayList<>())
                 .content("Test content")
                 .build();
 
         post = Post.builder()
                 .id(postId)
                 .author(user)
+                .images(new ArrayList<>())
                 .content("Test content")
                 .likes(Set.of(user))
                 .build();
@@ -69,11 +71,10 @@ public class PostServiceTest extends BaseTest {
     public void testAddPost_Positive() {
         when(userService.getCurrentUser()).thenReturn(user);
         when(postRepository.save(any(Post.class))).thenReturn(post);
-        when(postMapper.toPostDto(any(Post.class))).thenReturn(postDto);
 
-        PostDto result = postService.addPost(postDto, null);
+        Post result = postService.addPost(postDto, null);
 
-        assertEquals(postDto, result);
+        assertEquals(post, result);
         verify(postRepository, times(1)).save(any(Post.class));
     }
 
@@ -85,16 +86,16 @@ public class PostServiceTest extends BaseTest {
         assertThrows(RuntimeException.class, () -> postService.addPost(postDto, null));
     }
 
-//    @Test
-//    public void testToggleLike_Positive() {
-//        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-//        when(postRepository.save(any(Post.class))).thenReturn(post);
-//
-//        Post result = postService.toggleLike(postId, user);
-//
-//        assertEquals(post, result);
-//        verify(postRepository, times(1)).save(any(Post.class));
-//    }
+    @Test
+    public void testToggleLike_Positive() {
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postRepository.save(any(Post.class))).thenReturn(post);
+
+        Post result = postService.toggleLike(postId, user);
+
+        assertEquals(post, result);
+        verify(postRepository, times(1)).save(any(Post.class));
+    }
 
     @Test
     public void testToggleLike_Negative() {
@@ -106,11 +107,10 @@ public class PostServiceTest extends BaseTest {
     @Test
     public void testGetPostById_Positive() {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-        when(postMapper.toPostDto(any(Post.class))).thenReturn(postDto);
 
-        PostDto result = postService.getPostById(postId);
+        Post result = postService.getPostById(postId);
 
-        assertEquals(postDto, result);
+        assertEquals(post, result);
     }
 
     @Test
@@ -120,16 +120,16 @@ public class PostServiceTest extends BaseTest {
         assertThrows(ResourceNotFoundException.class, () -> postService.getPostById(postId));
     }
 
-//    @Test
-//    public void testDeletePost_Positive() {
-//        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-//        when(userService.getCurrentUser()).thenReturn(user);
-//
-//        UUID result = postService.deletePost(postId);
-//
-//        assertEquals(postId, result);
-//        verify(postRepository, times(1)).delete(any(Post.class));
-//    }
+    @Test
+    public void testDeletePost_Positive() {
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(userService.getCurrentUser()).thenReturn(user);
+        
+        UUID result = postService.deletePost(postId);
+
+        assertEquals(postId, result);
+        verify(postRepository, times(1)).delete(any(Post.class));
+    }
 
     @Test
     public void testDeletePost_Negative() {
@@ -142,11 +142,11 @@ public class PostServiceTest extends BaseTest {
     public void testUpdatePost_Positive() {
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(userService.getCurrentUser()).thenReturn(user);
-        when(postMapper.toPostDto(any(Post.class))).thenReturn(postDto);
+        when(postService.updatePost(postId, postDto)).thenReturn(post);
 
-        PostDto result = postService.updatePost(postId, postDto);
+        Post result = postService.updatePost(postId, postDto);
 
-        assertEquals(postDto, result);
+        assertEquals(post, result);
         verify(postRepository, times(1)).save(any(Post.class));
     }
 

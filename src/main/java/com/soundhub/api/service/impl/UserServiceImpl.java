@@ -197,7 +197,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getCurrentUser() {
-        var username = SecurityContextHolder.getContext()
+        String username = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getName();
 

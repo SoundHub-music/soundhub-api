@@ -28,7 +28,7 @@ public class UserController {
     private UserMapper userMapper;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> GetUserById(@PathVariable UUID userId) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable UUID userId) {
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(userMapper.userToUserDto(user), HttpStatus.OK);
     }
@@ -64,38 +64,52 @@ public class UserController {
     }
 
     @PutMapping("/addFriend/{friendId}")
-    public ResponseEntity<User> addFriend(@PathVariable UUID friendId) throws IOException {
-        return ResponseEntity.ok(userService.addFriend(friendId));
+    public ResponseEntity<UserDto> addFriend(@PathVariable UUID friendId) throws IOException {
+        User newFriend = userService.addFriend(friendId);
+        UserDto newFriendDto = userMapper.userToUserDto(newFriend);
+
+        return ResponseEntity.ok(newFriendDto);
     }
 
     @PutMapping("/deleteFriend/{friendId}")
-    public ResponseEntity<User> deleteFriend(@PathVariable UUID friendId) throws IOException {
-        return ResponseEntity.ok(userService.deleteFriend(friendId));
+    public ResponseEntity<UserDto> deleteFriend(@PathVariable UUID friendId) throws IOException {
+        return ResponseEntity.ok(userMapper.userToUserDto(userService.deleteFriend(friendId)));
     }
 
     @GetMapping("/recommendedFriends")
-    public ResponseEntity<List<User>> getRecommendedFriends() {
+    public ResponseEntity<List<UserDto>> getRecommendedFriends() {
         List<User> potentialFriends = userService.getRecommendedFriends();
-        return new ResponseEntity<>(potentialFriends, HttpStatus.OK);
+        List<UserDto> userDtos = potentialFriends.stream().map(userMapper::userToUserDto).toList();
+
+        return new ResponseEntity<>(userDtos, HttpStatus.OK);
     }
 
     @GetMapping("/{userId}/friends")
-    public ResponseEntity<List<User>> getUserFriendsById(@PathVariable UUID userId) {
-        return new ResponseEntity<>(userService.getUserFriendsById(userId), HttpStatus.OK);
+    public ResponseEntity<List<UserDto>> getUserFriendsById(@PathVariable UUID userId) {
+        List<User> friends = userService.getUserFriendsById(userId);
+        List<UserDto> friendsDto = friends.stream().map(userMapper::userToUserDto).toList();
+
+        return new ResponseEntity<>(friendsDto, HttpStatus.OK);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<User>> searchUsersByFullName(@RequestParam String name) {
+    public ResponseEntity<List<UserDto>> searchUsersByFullName(@RequestParam String name) {
         List<User> users = userService.searchByFullName(name);
+        List<UserDto> usersDtoList = users.stream().map(userMapper::userToUserDto).toList();
+
         if (users.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(users, HttpStatus.OK);
+
+        return new ResponseEntity<>(usersDtoList, HttpStatus.OK);
     }
 
     @PutMapping("/user/online")
-    public ResponseEntity<User> updateUserOnline(@RequestParam(name = "value") boolean online) {
-        return new ResponseEntity<>(userService.updateUserOnline(online), HttpStatus.OK);
+    public ResponseEntity<UserDto> updateUserOnline(@RequestParam(name = "value") boolean online) {
+        User toggledUser = userService.updateUserOnline(online);
+        UserDto toggledUserDto = userMapper.userToUserDto(toggledUser);
+
+        return new ResponseEntity<>(toggledUserDto, HttpStatus.OK);
     }
 
     @PostMapping("/compatibleUsers")

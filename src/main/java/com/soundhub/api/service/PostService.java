@@ -10,17 +10,22 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PostService {
-    PostDto addPost(PostDto postDto, List<MultipartFile> files);
+    Post addPost(PostDto postDto, List<MultipartFile> files);
 
     Post toggleLike(UUID postId, User user);
 
-    PostDto getPostById(UUID postId);
+    Post getPostById(UUID postId);
 
     UUID deletePost(UUID postId);
 
-    PostDto updatePost(UUID postId, PostDto postDto);
+    Post updatePost(UUID postId, PostDto postDto);
 
-    PostDto updatePost(UUID postId, PostDto postDto, List<MultipartFile> files, List<String> replaceFilesUrls) throws IOException;
+    Post updatePost(
+            UUID postId,
+            PostDto postDto,
+            List<MultipartFile> files,
+            List<String> replaceFilesUrls
+    ) throws IOException;
 
     List<Post> getPostsByAuthor(UUID authorId);
 }

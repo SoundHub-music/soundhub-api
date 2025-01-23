@@ -25,9 +25,10 @@ public class PostController {
 
     @Autowired
     private UserService userService;
+
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable UUID postId) {
-        PostDto post = postService.getPostById(postId);
+    public ResponseEntity<Post> getPostById(@PathVariable UUID postId) {
+        Post post = postService.getPostById(postId);
         log.info("getPostById[1] controller: Post has successfully found by ID: {}", postId);
         return new ResponseEntity<>(post, HttpStatus.OK);
     }
@@ -39,24 +40,24 @@ public class PostController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<PostDto> addPost(
-        @RequestPart PostDto postDto,
-        @RequestPart(required = false) List<MultipartFile> files
+    public ResponseEntity<Post> addPost(
+            @RequestPart PostDto postDto,
+            @RequestPart(required = false) List<MultipartFile> files
     ) {
         return ResponseEntity.ok(postService.addPost(postDto, files));
     }
 
     @PutMapping("/update/{postId}")
-    public ResponseEntity<PostDto> updatePost(
+    public ResponseEntity<Post> updatePost(
             @PathVariable UUID postId,
             @RequestPart PostDto postDto,
             @RequestPart(
-                required = false,
-                name = Constants.FILE_REQUEST_PART_ID
+                    required = false,
+                    name = Constants.FILE_REQUEST_PART_ID
             ) List<MultipartFile> files,
             @RequestPart(
-                required = false,
-                name = Constants.DELETE_FILE_LIST_REQUEST_PART_ID
+                    required = false,
+                    name = Constants.DELETE_FILE_LIST_REQUEST_PART_ID
             )
             List<String> deleteFiles
     ) throws IOException {

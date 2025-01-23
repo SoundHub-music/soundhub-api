@@ -28,14 +28,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
 @Builder
-public class User implements UserDetails {
+public class User implements UserDetails, TransformableUser {
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.TIME)
@@ -122,26 +121,6 @@ public class User implements UserDetails {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonFormat(pattern = Constants.LOCAL_DATETIME_FORMAT)
     private LocalDateTime lastOnline;
-
-    public User(String email, String password,
-                String firstName, String lastName, LocalDate birthday,
-                String city, String country, Gender gender, String avatarUrl,
-                String description, List<String> languages,
-                List<Genre> favoriteGenres, List<Integer> favoriteArtists) {
-        this.email = email;
-        this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.birthday = birthday;
-        this.city = city;
-        this.country = country;
-        this.gender = gender;
-        this.avatarUrl = avatarUrl;
-        this.description = description;
-        this.languages = languages;
-        this.favoriteGenres = favoriteGenres;
-        this.favoriteArtistsIds = favoriteArtists;
-    }
 
     @Override
     @JsonIgnore

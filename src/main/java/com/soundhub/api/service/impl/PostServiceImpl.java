@@ -11,7 +11,6 @@ import com.soundhub.api.service.FileService;
 import com.soundhub.api.service.PostService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.PostMapper;
-import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,10 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -43,14 +39,11 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private PostMapper postMapper;
 
-    @Autowired
-    private EntityManager entityManager;
-
     @Value("${project.postImg}")
     private String postFolder;
 
     @Override
-    public PostDto addPost(PostDto postDto, List<MultipartFile> files) {
+    public Post addPost(PostDto postDto, List<MultipartFile> files) {
         User author = userService.getCurrentUser();
         List<String> fileNames;
         List<String> postImageUrl = new ArrayList<>();
@@ -68,8 +61,8 @@ public class PostServiceImpl implements PostService {
                 .build();
 
         log.info("addPost[1]: Adding post {}", post);
-        postDto = postMapper.toPostDto(postRepository.save(post));
-        return postDto;
+
+        return postRepository.save(post);
     }
 
     @Override
@@ -79,21 +72,23 @@ public class PostServiceImpl implements PostService {
                         Constants.POST_RESOURCE_NAME, Constants.ID_FIELD, postId)
                 );
 
-        Set<User> likes = post.getLikes();
+        Set<User> likes = new HashSet<>(post.getLikes());
         boolean isChanged = (likes.contains(user)) ? likes.remove(user) : likes.add(user);
 
         log.info("toggleLike[1]: Toggled like successfully: {}", isChanged);
+
         if (isChanged) {
             postRepository.save(post);
         }
+
         return post;
     }
 
     @Override
-    public PostDto getPostById(UUID postId) {
+    public Post getPostById(UUID postId) {
         log.info("getPostById[1]: Getting post by ID {}", postId);
-        return postMapper.toPostDto(postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException(Constants.POST_RESOURCE_NAME, Constants.ID_FIELD, postId)));
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException(Constants.POST_RESOURCE_NAME, Constants.ID_FIELD, postId));
     }
 
     @Override
@@ -115,6 +110,7 @@ public class PostServiceImpl implements PostService {
                 throw new ApiException(HttpStatus.BAD_REQUEST, e.getMessage());
             }
         });
+
         postRepository.delete(post);
         log.info("deletePost[2]: Images was successfully deleted from the disk. Post ID {} deleted", postId);
         return post.getId();
@@ -122,7 +118,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostDto updatePost(UUID postId, PostDto postDto) {
+    public Post updatePost(UUID postId, PostDto postDto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         Constants.POST_RESOURCE_NAME, Constants.ID_FIELD, postId)
@@ -134,14 +130,13 @@ public class PostServiceImpl implements PostService {
 
         log.debug("updatePost[1]: Updating post without files replacing ID {}", postId);
         postMapper.updatePostFromDto(postDto, post);
-        postRepository.save(post);
 
-        return postMapper.toPostDto(post);
+        return postRepository.save(post);
     }
 
     @Override
     @Transactional
-    public PostDto updatePost(
+    public Post updatePost(
             UUID postId,
             PostDto postDto,
             List<MultipartFile> files,
@@ -169,8 +164,7 @@ public class PostServiceImpl implements PostService {
         log.debug("updatePost[1]: Updating post: files after insert {}", postImages);
 
         postMapper.updatePostFromDto(postDto, post);
-        postRepository.save(post);
-        return postMapper.toPostDto(post);
+        return postRepository.save(post);
     }
 
     private List<String> addNewFiles(List<MultipartFile> files) {

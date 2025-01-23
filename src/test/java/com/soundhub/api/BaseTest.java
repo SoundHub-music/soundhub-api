@@ -71,6 +71,7 @@ public class BaseTest {
                 .password("testPassword")
                 .firstName("Vasya")
                 .lastName("Pupkin")
+                .avatarUrl("avatar.jpg")
                 .birthday(LocalDate.of(2000, 5, 15))
                 .role(Role.USER)
                 .build();
@@ -81,6 +82,7 @@ public class BaseTest {
                 .password("testPassword")
                 .firstName("Oleg")
                 .lastName("Pupkin")
+                .avatarUrl("avatar.jpg")
                 .birthday(LocalDate.of(2005, 5, 15))
                 .role(Role.USER)
                 .build();

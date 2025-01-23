@@ -9,6 +9,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.soundhub.api.Constants;
 import com.soundhub.api.enums.Gender;
 import com.soundhub.api.model.Genre;
+import com.soundhub.api.model.TransformableUser;
 import com.soundhub.api.model.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -28,23 +29,23 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserDto {
+public class UserDto implements TransformableUser {
     private UUID id;
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 254)
     @Email
     private String email;
 
     @NotBlank
-    @Size(min = 8, max = 30)
+    @Size(min = 8)
     private String password;
 
     @NotBlank
-    @Size(min = 2, max = 20)
+    @Size(min = 2, max = 255)
     private String firstName;
 
     @NotBlank
-    @Size(min = 2, max = 20)
+    @Size(min = 2, max = 255)
     private String lastName;
 
     @NotNull

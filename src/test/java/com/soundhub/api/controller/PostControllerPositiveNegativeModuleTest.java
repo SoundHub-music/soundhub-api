@@ -77,12 +77,12 @@ public class PostControllerPositiveNegativeModuleTest {
 
     @Test
     public void testGetPostById_Positive() {
-        when(postService.getPostById(postId)).thenReturn(postDto);
+        when(postService.getPostById(postId)).thenReturn(post);
 
-        ResponseEntity<PostDto> response = postController.getPostById(postId);
+        ResponseEntity<Post> response = postController.getPostById(postId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(postDto, response.getBody());
+        assertEquals(post, response.getBody());
     }
 
     @Test
@@ -90,7 +90,7 @@ public class PostControllerPositiveNegativeModuleTest {
         when(postService.getPostById(postId)).thenThrow(new ResourceNotFoundException(Constants.POST_RESOURCE_NAME, Constants.ID_FIELD, postId));
 
         assertThrows(ResourceNotFoundException.class, () -> {
-            ResponseEntity<PostDto> response = postController.getPostById(postId);
+            ResponseEntity<Post> response = postController.getPostById(postId);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         });
 
@@ -119,12 +119,12 @@ public class PostControllerPositiveNegativeModuleTest {
 
     @Test
     public void testAddPost_Positive() {
-        when(postService.addPost(any(PostDto.class), any())).thenReturn(postDto);
+        when(postService.addPost(any(PostDto.class), any())).thenReturn(post);
 
-        ResponseEntity<PostDto> response = postController.addPost(postDto, null);
+        ResponseEntity<Post> response = postController.addPost(postDto, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(postDto, response.getBody());
+        assertEquals(post, response.getBody());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class PostControllerPositiveNegativeModuleTest {
         assertThrows(ApiException.class, () -> {
             when(postService.addPost(any(PostDto.class), any())).thenThrow(new ApiException(HttpStatus.BAD_REQUEST, "Invalid data"));
 
-            ResponseEntity<PostDto> response = postController.addPost(postDto, null);
+            ResponseEntity<Post> response = postController.addPost(postDto, null);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         });

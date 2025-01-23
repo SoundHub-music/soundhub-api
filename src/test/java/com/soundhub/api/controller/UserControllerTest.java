@@ -8,7 +8,6 @@ import com.soundhub.api.dto.response.CompatibleUsersResponse;
 import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
-import com.soundhub.api.service.RecommendationService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -45,9 +44,6 @@ public class UserControllerTest extends BaseTest {
     @Mock
     private UserMapper userMapper;
 
-    @Mock
-    private RecommendationService recommendationService;
-
     @InjectMocks
     private UserController userController;
 
@@ -60,6 +56,7 @@ public class UserControllerTest extends BaseTest {
                 .email("vasya.pupkin@gmail.com")
                 .password("testPassword")
                 .firstName("Vasya")
+                .avatarUrl("avatar.jpg")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2000, 5, 15))
                 .build();
@@ -69,6 +66,7 @@ public class UserControllerTest extends BaseTest {
                 .email("vasya.pupkin@gmail.com")
                 .password("testPassword")
                 .firstName("Vasya")
+                .avatarUrl("avatar.jpg")
                 .lastName("Pupkin")
                 .birthday(LocalDate.of(2000, 5, 15))
                 .build();
@@ -106,7 +104,7 @@ public class UserControllerTest extends BaseTest {
         when(userService.getUserById(userId)).thenReturn(user);
         when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
-        ResponseEntity<UserDto> response = userController.GetUserById(userId);
+        ResponseEntity<UserDto> response = userController.getUserById(userId);
         log.debug("testGetUser_returnUserDto[2]: response: {}", response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(userDto, response.getBody());
@@ -121,7 +119,7 @@ public class UserControllerTest extends BaseTest {
         when(userService.getUserById(userId)).thenThrow(new ResourceNotFoundException("user", "userId", userId));
 
         assertThrows(ResourceNotFoundException.class, () -> {
-            ResponseEntity<UserDto> response = userController.GetUserById(userId);
+            ResponseEntity<UserDto> response = userController.getUserById(userId);
             log.debug("testGetUser_nonExistentUser_returnNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
@@ -215,12 +213,13 @@ public class UserControllerTest extends BaseTest {
     public void testAddFriend() throws IOException {
         log.debug("testAddFriend[1]: start test");
         when(userService.addFriend(userId)).thenReturn(user);
+        when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
-        ResponseEntity<User> response = userController.addFriend(userId);
+        ResponseEntity<UserDto> response = userController.addFriend(userId);
         log.debug("testAddFriend[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(user, response.getBody());
+        assertEquals(userDto, response.getBody());
         verify(userService, times(1)).addFriend(userId);
     }
 
@@ -228,12 +227,14 @@ public class UserControllerTest extends BaseTest {
     public void testDeleteFriend() throws IOException {
         log.debug("testDeleteFriend[1]: start test");
         when(userService.deleteFriend(userId)).thenReturn(user);
+        when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
-        ResponseEntity<User> response = userController.deleteFriend(userId);
+        ResponseEntity<UserDto> response = userController.deleteFriend(userId);
+
         log.debug("testDeleteFriend[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(user, response.getBody());
+        assertEquals(userDto, response.getBody());
         verify(userService, times(1)).deleteFriend(userId);
     }
 
@@ -265,7 +266,7 @@ public class UserControllerTest extends BaseTest {
                 .filter(recommendedUserArtistIds::contains)
                 .toList();
 
-        ResponseEntity<List<User>> response = userController.getRecommendedFriends();
+        ResponseEntity<List<UserDto>> response = userController.getRecommendedFriends();
         log.debug("testGetRecommendedFriends[1]: response: {}", response.getBody());
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -278,15 +279,18 @@ public class UserControllerTest extends BaseTest {
     @Test
     public void testGetUserFriendsById() {
         log.debug("testGetUserFriendsById[1]: start test");
+        List<UserDto> friendsDto = List.of(userDto);
         List<User> friends = List.of(user);
 
         when(userService.getUserFriendsById(userId)).thenReturn(friends);
+        when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
-        ResponseEntity<List<User>> response = userController.getUserFriendsById(userId);
+        ResponseEntity<List<UserDto>> response = userController.getUserFriendsById(userId);
+
         log.debug("testGetUserFriendsById[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(friends, response.getBody());
+        assertEquals(friendsDto, response.getBody());
         verify(userService, times(1)).getUserFriendsById(userId);
     }
 
@@ -294,14 +298,16 @@ public class UserControllerTest extends BaseTest {
     public void testSearchUsersByFullName() {
         log.debug("testSearchUsersByFullName[1]: start test");
         List<User> users = List.of(user);
+        List<UserDto> usersDto = List.of(userDto);
 
         when(userService.searchByFullName("John")).thenReturn(users);
+        when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
-        ResponseEntity<List<User>> response = userController.searchUsersByFullName("John");
+        ResponseEntity<List<UserDto>> response = userController.searchUsersByFullName("John");
         log.debug("testSearchUsersByFullName[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(users, response.getBody());
+        assertEquals(usersDto, response.getBody());
         verify(userService, times(1)).searchByFullName("John");
     }
 
@@ -309,12 +315,13 @@ public class UserControllerTest extends BaseTest {
     public void testUpdateUserOnline() {
         log.debug("testToggleUserOnline[1]: start test");
         when(userService.updateUserOnline(true)).thenReturn(user);
+        when(userMapper.userToUserDto(user)).thenReturn(userDto);
 
-        ResponseEntity<User> response = userController.updateUserOnline(true);
+        ResponseEntity<UserDto> response = userController.updateUserOnline(true);
         log.debug("testToggleUserOnline[2]: response: {}", response);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(user, response.getBody());
+        assertEquals(userDto, response.getBody());
         verify(userService, times(1)).updateUserOnline(true);
     }
 
@@ -345,7 +352,7 @@ public class UserControllerTest extends BaseTest {
         when(userService.addFriend(userId)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            ResponseEntity<User> response = userController.addFriend(userId);
+            ResponseEntity<UserDto> response = userController.addFriend(userId);
             log.debug("testAddFriendNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
@@ -360,7 +367,7 @@ public class UserControllerTest extends BaseTest {
         when(userService.deleteFriend(userId)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            ResponseEntity<User> response = userController.deleteFriend(userId);
+            ResponseEntity<UserDto> response = userController.deleteFriend(userId);
             log.debug("testDeleteFriendNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
@@ -374,7 +381,7 @@ public class UserControllerTest extends BaseTest {
         List<User> empty = new ArrayList<>();
         when(userService.getRecommendedFriends()).thenReturn(empty);
 
-        ResponseEntity<List<User>> response = userController.getRecommendedFriends();
+        ResponseEntity<List<UserDto>> response = userController.getRecommendedFriends();
         log.debug("testGetRecommendedFriendsNotFound[1]: response: {}", response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody()).isEmpty());
@@ -388,7 +395,7 @@ public class UserControllerTest extends BaseTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             when(userService.getUserFriendsById(userId)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
-            ResponseEntity<List<User>> response = userController.getUserFriendsById(userId);
+            ResponseEntity<List<UserDto>> response = userController.getUserFriendsById(userId);
             log.debug("testGetUserFriendsByIdNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
@@ -402,7 +409,7 @@ public class UserControllerTest extends BaseTest {
         log.debug("testSearchUsersByFullNameNotFound[1]: start test");
         when(userService.searchByFullName("NonExistentName")).thenReturn(new ArrayList<>());
 
-        ResponseEntity<List<User>> response = userController.searchUsersByFullName("NonExistentName");
+        ResponseEntity<List<UserDto>> response = userController.searchUsersByFullName("NonExistentName");
         log.debug("testSearchUsersByFullNameNotFound[2]: response: {}", response);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -416,7 +423,7 @@ public class UserControllerTest extends BaseTest {
         assertThrows(ResourceNotFoundException.class, () -> {
             when(userService.updateUserOnline(true)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
-            ResponseEntity<User> response = userController.updateUserOnline(true);
+            ResponseEntity<UserDto> response = userController.updateUserOnline(true);
             log.debug("testToggleUserOnlineNotFound[2]: response: {}", response);
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertNull(response.getBody());
