@@ -1,5 +1,7 @@
 package com.soundhub.api;
 
+import java.util.List;
+
 public class Constants {
     public static final String EMAIL_REGEX = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
     public static final String HOST_REGEX = "https?:\\/\\/(?:[a-zA-Z0-9.-]+|\\d{1,3}(?:\\.\\d{1,3}){3})(:\\d+)?(?:\\/[^\\s]*)?";
@@ -13,6 +15,9 @@ public class Constants {
             "/v3/api-docs/**",
             "/ws/**"
     };
+
+    public static final List<String> ALLOWED_METHODS = List.of("GET", "POST", "PUT", "DELETE");
+    public static final List<String> ALLOWED_HEADERS = List.of("*");
 
     public static final String USER_RESOURCE_NAME = "User";
     public static final String POST_RESOURCE_NAME = "Post";

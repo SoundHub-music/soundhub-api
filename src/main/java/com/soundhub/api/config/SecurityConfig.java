@@ -17,7 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.Collections;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -33,9 +32,10 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new CorsConfiguration();
+
                     corsConfiguration.setAllowedOriginPatterns(Collections.singletonList("*"));
-                    corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    corsConfiguration.setAllowedHeaders(List.of("*"));
+                    corsConfiguration.setAllowedMethods(Constants.ALLOWED_METHODS);
+                    corsConfiguration.setAllowedHeaders(Constants.ALLOWED_HEADERS);
                     corsConfiguration.setAllowCredentials(true);
                     return corsConfiguration;
                 }))
