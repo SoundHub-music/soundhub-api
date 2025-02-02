@@ -1,9 +1,7 @@
 package com.soundhub.api.service;
 
 import com.soundhub.api.BaseTest;
-import com.soundhub.api.dto.UserCompatibilityDto;
 import com.soundhub.api.dto.UserDto;
-import com.soundhub.api.dto.response.CompatibleUsersResponse;
 import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
@@ -28,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -129,7 +126,7 @@ public class UserServiceTest extends BaseTest {
     }
 
     @Test
-    public void testDeleteFriend() throws IOException {
+    public void testDeleteFriend() {
         User friend = new User();
         friend.setId(UUID.randomUUID());
 
@@ -214,27 +211,5 @@ public class UserServiceTest extends BaseTest {
         User toggledUser = userService.updateUserOnline(!isOnline);
 
         assertNotEquals(isOnline, toggledUser.isOnline());
-    }
-
-    @Test
-    public void testFindCompatibilityPercentage() {
-        user.setFavoriteArtistsIds(List.of(1, 2, 3));
-
-        User otherUser = new User();
-        otherUser.setFavoriteArtistsIds(List.of(3, 4, 5));
-        List<UUID> userIds = List.of(UUID.randomUUID());
-
-        User actual = userService.getCurrentUser();
-        assertEquals(user, actual);
-        when(userRepository.findByUserIds(userIds)).thenReturn(List.of(otherUser));
-
-        CompatibleUsersResponse response = userService.findCompatibilityPercentage(userIds);
-
-        assertNotNull(response);
-        assertEquals(1, response.getUserCompatibilities().size());
-
-        UserCompatibilityDto compatibilityDto = response.getUserCompatibilities().get(0);
-        assertEquals(otherUser, compatibilityDto.getUser());
-        assertEquals(20f, compatibilityDto.getCompatibility(), 0.01);
     }
 }

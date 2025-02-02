@@ -61,7 +61,7 @@ public class UserDto implements TransformableUser {
     private List<String> languages;
     private List<User> friends;
     private List<Genre> favoriteGenres;
-    private List<Integer> favoriteArtistsIds;
+    private List<UUID> favoriteArtistsMbids;
 
     @NotNull
     private boolean online = false;

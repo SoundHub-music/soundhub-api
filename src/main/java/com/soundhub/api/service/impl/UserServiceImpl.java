@@ -1,14 +1,11 @@
 package com.soundhub.api.service.impl;
 
 import com.soundhub.api.Constants;
-import com.soundhub.api.dto.UserCompatibilityDto;
 import com.soundhub.api.dto.UserDto;
-import com.soundhub.api.dto.response.CompatibleUsersResponse;
 import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.enums.Role;
 import com.soundhub.api.exception.ApiException;
 import com.soundhub.api.exception.ResourceNotFoundException;
-import com.soundhub.api.model.Genre;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.FileService;
@@ -28,7 +25,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
                 .description(userDto.getDescription())
                 .languages(userDto.getLanguages())
                 .favoriteGenres(userDto.getFavoriteGenres())
-                .favoriteArtistsIds(userDto.getFavoriteArtistsIds())
+                .favoriteArtistsMbids(userDto.getFavoriteArtistsMbids())
                 .role(Role.USER)
                 .build();
 
@@ -260,68 +260,5 @@ public class UserServiceImpl implements UserService {
         });
 
         return potentialFriends;
-    }
-
-    @Override
-    public CompatibleUsersResponse findCompatibilityPercentage(List<UUID> listUsersCompareWith) {
-        User userCompareTo = getCurrentUser();
-        List<User> usersCompareWith = getUsersByIds(listUsersCompareWith);
-        HashMap<User, Float> listUsersPercent = new HashMap<>();
-
-        List<Integer> artistsCompareTo = userCompareTo.getFavoriteArtistsIds();
-        List<UUID> genresCompareTo = userCompareTo.getFavoriteGenres()
-                .stream()
-                .map(Genre::getId).toList();
-
-        usersCompareWith.forEach(userCompareWith -> {
-            List<Integer> artistsCompareWith = userCompareWith.getFavoriteArtistsIds();
-            List<UUID> genresCompareWith = userCompareWith.getFavoriteGenres()
-                    .stream()
-                    .map(Genre::getId).toList();
-
-            float artistCompatibility = calculateCompatibilityForUserBy(artistsCompareWith, artistsCompareTo);
-            float genreCompatibility = calculateCompatibilityForUserBy(genresCompareWith, genresCompareTo);
-
-            float meanCompatibility = (artistCompatibility + genreCompatibility) / 2;
-
-            if (artistCompatibility == 0 || genreCompatibility == 0) {
-                meanCompatibility = Math.max(artistCompatibility, genreCompatibility);
-            }
-
-            listUsersPercent.put(userCompareWith, meanCompatibility);
-        });
-
-        log.debug("findCompatibilityPercentage[4]: list (userCompareWith: percent): {}", listUsersPercent);
-
-        List<UserCompatibilityDto> userCompatibilityList = new ArrayList<>();
-
-        listUsersPercent.forEach((user, compatibility) -> {
-            UserCompatibilityDto dto = UserCompatibilityDto.builder()
-                    .user(user)
-                    .compatibility(compatibility)
-                    .build();
-
-            userCompatibilityList.add(dto);
-        });
-
-        return new CompatibleUsersResponse(userCompatibilityList);
-    }
-
-
-    private <T> float calculateCompatibilityForUserBy(List<T> entityCompareWith, List<T> entityCompareTo) {
-        float compatibility = 0;
-
-        if (entityCompareTo.isEmpty() || entityCompareWith.isEmpty())
-            return compatibility;
-
-        Set<T> intersection = new HashSet<>(entityCompareWith);
-        intersection.retainAll(entityCompareTo);
-
-        Set<T> total = new HashSet<>(entityCompareWith);
-        total.addAll(entityCompareTo);
-
-        compatibility = ((float) intersection.size() / (float) total.size()) * 100;
-
-        return compatibility;
     }
 }

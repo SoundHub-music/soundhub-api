@@ -6,6 +6,7 @@ import com.soundhub.api.dto.request.CompatibleUsersRequest;
 import com.soundhub.api.dto.response.CompatibleUsersResponse;
 import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.model.User;
+import com.soundhub.api.service.UserCompatibilityService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ import java.util.UUID;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserCompatibilityService userCompatibilityService;
 
     @Autowired
     private UserMapper userMapper;
@@ -64,7 +68,7 @@ public class UserController {
     }
 
     @PutMapping("/addFriend/{friendId}")
-    public ResponseEntity<UserDto> addFriend(@PathVariable UUID friendId) throws IOException {
+    public ResponseEntity<UserDto> addFriend(@PathVariable UUID friendId) {
         User newFriend = userService.addFriend(friendId);
         UserDto newFriendDto = userMapper.userToUserDto(newFriend);
 
@@ -114,6 +118,9 @@ public class UserController {
 
     @PostMapping("/compatibleUsers")
     public ResponseEntity<CompatibleUsersResponse> findCompatibilityPercentage(@RequestBody CompatibleUsersRequest requestBody) {
-        return new ResponseEntity<>(userService.findCompatibilityPercentage(requestBody.getListUsersCompareWith()), HttpStatus.OK);
+        List<UUID> userIds = requestBody.getListUsersCompareWith();
+        CompatibleUsersResponse response = userCompatibilityService.findCompatibilityPercentage(userIds);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

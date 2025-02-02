@@ -1,7 +1,6 @@
 package com.soundhub.api.service;
 
 import com.soundhub.api.dto.UserDto;
-import com.soundhub.api.dto.response.CompatibleUsersResponse;
 import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.model.User;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +41,4 @@ public interface UserService {
     User updateUserOnline(boolean online);
 
     List<User> getRecommendedFriends();
-
-    CompatibleUsersResponse findCompatibilityPercentage(List<UUID> listUsersCompareWith);
 }

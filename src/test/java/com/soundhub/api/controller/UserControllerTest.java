@@ -8,6 +8,7 @@ import com.soundhub.api.dto.response.CompatibleUsersResponse;
 import com.soundhub.api.dto.response.UserExistenceResponse;
 import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
+import com.soundhub.api.service.UserCompatibilityService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.util.mappers.UserMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,9 @@ public class UserControllerTest extends BaseTest {
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private UserCompatibilityService userCompatibilityService;
 
     @Mock
     private UserMapper userMapper;
@@ -240,14 +244,18 @@ public class UserControllerTest extends BaseTest {
 
     @Test
     public void testGetRecommendedFriends() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
+
         User currentUser = User.builder()
                 .id(UUID.randomUUID())
-                .favoriteArtistsIds(List.of(1, 2, 3))
+                .favoriteArtistsMbids(List.of(id1, id2, id3))
                 .build();
 
         User potentialFriend = User.builder()
                 .id(UUID.randomUUID())
-                .favoriteArtistsIds(List.of(2, 5, 7, 1))
+                .favoriteArtistsMbids(List.of(id2, UUID.randomUUID(), UUID.randomUUID()))
                 .build();
 
         List<User> rawFriends = List.of(potentialFriend);
@@ -256,12 +264,12 @@ public class UserControllerTest extends BaseTest {
         when(userService.getRecommendedFriends()).thenReturn(rawFriends);
 
         User currentUserActual = userService.getCurrentUser();
-        List<Integer> recommendedUserArtistIds = rawFriends.stream()
-                .flatMap(u -> u.getFavoriteArtistsIds().stream())
+        List<UUID> recommendedUserArtistIds = rawFriends.stream()
+                .flatMap(u -> u.getFavoriteArtistsMbids().stream())
                 .toList();
 
-        List<Integer> intersectionArtistIds = currentUserActual
-                .getFavoriteArtistsIds()
+        List<UUID> intersectionArtistIds = currentUserActual
+                .getFavoriteArtistsMbids()
                 .stream()
                 .filter(recommendedUserArtistIds::contains)
                 .toList();
@@ -335,7 +343,7 @@ public class UserControllerTest extends BaseTest {
                         .compatibility(95.5f)
                         .build())).build();
 
-        when(userService.findCompatibilityPercentage(userIds)).thenReturn(compatibleUsersResponse);
+        when(userCompatibilityService.findCompatibilityPercentage(userIds)).thenReturn(compatibleUsersResponse);
 
         ResponseEntity<CompatibleUsersResponse> response = userController.findCompatibilityPercentage(CompatibleUsersRequest.builder()
                 .listUsersCompareWith(userIds).build());
@@ -343,7 +351,7 @@ public class UserControllerTest extends BaseTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(compatibleUsersResponse, response.getBody());
-        verify(userService, times(1)).findCompatibilityPercentage(userIds);
+        verify(userCompatibilityService, times(1)).findCompatibilityPercentage(userIds);
     }
 
     @Test
@@ -437,7 +445,7 @@ public class UserControllerTest extends BaseTest {
         log.debug("testFindCompatibilityPercentageNotFound[1]: start test");
         List<UUID> userIds = List.of(userId);
         assertThrows(ResourceNotFoundException.class, () -> {
-            when(userService.findCompatibilityPercentage(userIds)).thenThrow(new ResourceNotFoundException("User", "id", userId));
+            when(userCompatibilityService.findCompatibilityPercentage(userIds)).thenThrow(new ResourceNotFoundException("User", "id", userId));
 
             ResponseEntity<CompatibleUsersResponse> response = userController.findCompatibilityPercentage(CompatibleUsersRequest.builder()
                     .listUsersCompareWith(userIds).build());
@@ -446,6 +454,6 @@ public class UserControllerTest extends BaseTest {
             assertNull(response.getBody());
         });
 
-        verify(userService, times(1)).findCompatibilityPercentage(userIds);
+        verify(userCompatibilityService, times(1)).findCompatibilityPercentage(userIds);
     }
 }

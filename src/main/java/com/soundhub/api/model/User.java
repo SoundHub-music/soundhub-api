@@ -102,7 +102,7 @@ public class User implements UserDetails, TransformableUser {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
-    private List<Integer> favoriteArtistsIds = new ArrayList<>();
+    private List<UUID> favoriteArtistsMbids = new ArrayList<>();
 
     @Column(name = "role")
     @Enumerated(value = EnumType.STRING)
@@ -131,46 +131,5 @@ public class User implements UserDetails, TransformableUser {
     @Override
     public String getUsername() {
         return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", birthday=" + birthday +
-                ", city='" + city + '\'' +
-                ", country='" + country + '\'' +
-                ", gender=" + gender +
-                ", avatarUrl='" + avatarUrl + '\'' +
-                ", description='" + description + '\'' +
-                ", languages=" + languages +
-                ", favoriteGenres=" + favoriteGenres +
-                ", favoriteArtistsIds=" + favoriteArtistsIds +
-                ", role=" + role +
-                '}';
     }
 }
