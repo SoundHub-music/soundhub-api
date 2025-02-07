@@ -221,9 +221,9 @@ public class UserServiceImpl implements UserService {
             String firstName = parts[0];
             String lastName = parts.length > 1 ? parts[1] : "";
 
-            return userRepository.findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCase(firstName, lastName);
+            return userRepository.findByFirstNameAndLastName(firstName, lastName);
         } else {
-            return userRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(name, name);
+            return userRepository.findByFirstNameOrLastName(name, name);
         }
     }
 

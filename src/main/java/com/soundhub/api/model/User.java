@@ -8,14 +8,10 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.soundhub.api.Constants;
 import com.soundhub.api.enums.Gender;
 import com.soundhub.api.enums.Role;
-import com.soundhub.api.security.RefreshToken;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -50,11 +46,11 @@ public class User implements UserDetails, TransformableUser {
     private String password;
 
     @NotBlank
-    @Column(name = "firstName")
+    @Column(name = "first_name")
     private String firstName;
 
     @NotBlank
-    @Column(name = "lastName")
+    @Column(name = "last_name")
     private String lastName;
 
     @NotNull
@@ -72,7 +68,7 @@ public class User implements UserDetails, TransformableUser {
     @Column(name = "gender")
     private Gender gender;
 
-    @Column(name = "avatarUrl")
+    @Column(name = "avatar_url")
     private String avatarUrl;
 
     @Column(name = "description")
@@ -89,6 +85,7 @@ public class User implements UserDetails, TransformableUser {
             inverseJoinColumns = @JoinColumn(name = "friend_id"))
     @JsonIgnore
     @Builder.Default
+    @ToString.Exclude
     private List<User> friends = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -108,10 +105,6 @@ public class User implements UserDetails, TransformableUser {
     @Enumerated(value = EnumType.STRING)
     @JsonIgnore
     private Role role = Role.USER;
-
-    @OneToOne(mappedBy = "user")
-    @JsonIgnore
-    private RefreshToken refreshToken;
 
     @Column(name = "is_online")
     @NotNull

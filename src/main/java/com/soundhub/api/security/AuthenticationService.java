@@ -1,7 +1,8 @@
 package com.soundhub.api.security;
 
 import com.soundhub.api.Constants;
-import com.soundhub.api.dto.*;
+import com.soundhub.api.dto.SignInDto;
+import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.request.RefreshTokenRequest;
 import com.soundhub.api.dto.response.AuthResponse;
 import com.soundhub.api.dto.response.LogoutResponse;
@@ -78,8 +79,13 @@ public class AuthenticationService {
         String username = jwtService.extractUsername(jwt);
         User currentUser = userService.getUserByEmail(username);
 
-        blacklistingService.blackListJwt(jwt);
-        refreshTokenService.deleteRefreshToken(currentUser.getRefreshToken().getRefreshToken());
+        refreshTokenService.getRefreshTokenIfExistsByUser(currentUser).ifPresent(value -> {
+            String tokenValue = value.getRefreshToken();
+
+            blacklistingService.blackListJwt(jwt);
+            refreshTokenService.deleteRefreshToken(tokenValue);
+        });
+
         return new LogoutResponse(Constants.SUCCESSFUL_LOGOUT);
     }
 

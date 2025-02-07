@@ -18,7 +18,8 @@ import static org.mockito.Mockito.mock;
 
 @SpringBootTest(properties = {
         "project.resources.path=src/test/resources",
-        "project.staticFolder=static/"
+        "project.staticFolder=static/",
+        "refreshToken.expirationInMs=604800000"
 })
 public class BaseTest {
     protected final String fileFolder = "uploads";

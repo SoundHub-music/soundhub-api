@@ -18,8 +18,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE u.id IN :userIds")
     List<User> findByUserIds(List<UUID> userIds);
 
-    List<User> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
+    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) = LOWER(:firstName) OR LOWER(u.lastName) = LOWER(:lastName)")
+    List<User> findByFirstNameOrLastName(String firstName, String lastName);
 
-    List<User> findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCase(String firstName, String lastName);
+    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) = LOWER(:firstName) AND LOWER(u.lastName) = LOWER(:lastName)")
+    List<User> findByFirstNameAndLastName(String firstName, String lastName);
 
 }
