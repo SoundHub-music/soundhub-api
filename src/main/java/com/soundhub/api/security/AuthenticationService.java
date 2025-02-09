@@ -29,13 +29,15 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public AuthResponse signUp(UserDto userDto, MultipartFile file) throws IOException {
-        if (Boolean.TRUE.equals(userService.checkEmailAvailability(userDto.getEmail()))) {
+        if (userService.checkEmailAvailability(userDto.getEmail())) {
             throw new UserAlreadyExistsException(Constants.USER_EMAIL_EXISTS_MSG);
         }
 
         User user = userService.addUser(userDto, file);
-        var jwt = jwtService.generateToken(user);
-        var refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+        String email = user.getEmail();
+
+        String jwt = jwtService.generateToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(email);
 
         return AuthResponse.builder()
                 .accessToken(jwt)

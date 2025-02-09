@@ -13,9 +13,11 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -31,7 +33,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.stream(Constants.ENDPOINT_WHITELIST)
-            .map(e -> e.replace("/**", ""))
+            .map(endpoint -> endpoint.replace("/**", ""))
             .toList();
 
     private final JwtService jwtService;
@@ -53,6 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String jwt = extractTokenFromHeader(request.getHeader(Constants.AUTHORIZATION_HEADER_NAME));
+
         if (isTokenInvalid(jwt, response)) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
             return;
@@ -85,14 +88,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private boolean isTokenInvalid(String jwt, HttpServletResponse response) throws IOException {
         try {
-            if (jwt == null || isTokenBlacklisted(jwt))
-                return true;
-
+            return jwt == null || isTokenBlacklisted(jwt);
         } catch (RedisConnectionFailureException e) {
             sendErrorResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Redis connection failure");
             return true;
         }
-        return false;
     }
 
     /**
@@ -117,11 +117,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                SecurityContext context = SecurityContextHolder.getContext();
+                var authorities = userDetails.getAuthorities();
+
+                var authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        authorities
+                );
+
+                WebAuthenticationDetails authDetails = new WebAuthenticationDetailsSource()
+                        .buildDetails(request);
+
+                authToken.setDetails(authDetails);
+                context.setAuthentication(authToken);
             }
         } catch (Exception e) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication error");

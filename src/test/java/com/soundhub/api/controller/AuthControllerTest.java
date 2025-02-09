@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soundhub.api.BaseTest;
 import com.soundhub.api.Constants;
 import com.soundhub.api.dto.SignInDto;
-import com.soundhub.api.dto.SignUpDto;
 import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.dto.request.RefreshTokenRequest;
 import com.soundhub.api.dto.response.AuthResponse;
@@ -31,7 +30,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.mockito.Mockito.*;
@@ -54,8 +52,6 @@ public class AuthControllerTest extends BaseTest {
     @InjectMocks
     private AuthController authController;
 
-    private UserDto userDto;
-    private SignUpDto signUpDto;
     private SignInDto signInDto;
     private AuthResponse authResponse;
     private LogoutResponse logoutResponse;
@@ -67,25 +63,8 @@ public class AuthControllerTest extends BaseTest {
         MockitoAnnotations.openMocks(this);
         this.mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
         initUser();
+        initUserDto();
         generateAccessToken(user);
-
-        userDto = UserDto.builder()
-                .id(UUID.randomUUID())
-                .email("vasya.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Vasya")
-                .lastName("Pupkin")
-                .birthday(LocalDate.of(2000, 5, 15))
-                .online(false)
-                .build();
-
-        signUpDto = SignUpDto.builder()
-                .email("vasya.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Vasya")
-                .lastName("Pupkin")
-                .birthday(LocalDate.of(2000, 5, 15))
-                .build();
 
         signInDto = SignInDto.builder()
                 .email("vasya.pupkin@gmail.com")
