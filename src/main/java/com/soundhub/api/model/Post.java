@@ -1,10 +1,7 @@
 package com.soundhub.api.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.HashSet;
@@ -26,6 +23,8 @@ public class Post extends ContentEntity {
     @JoinTable(
             name = "user_posts",
             joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @Builder.Default
     private Set<User> likes = new HashSet<>();
 }

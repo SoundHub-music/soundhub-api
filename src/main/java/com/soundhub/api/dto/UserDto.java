@@ -64,6 +64,7 @@ public class UserDto implements TransformableUser {
     private List<UUID> favoriteArtistsMbids;
 
     @NotNull
+    @Builder.Default
     private boolean online = false;
 
     @JsonSerialize(using = LocalDateTimeSerializer.class)

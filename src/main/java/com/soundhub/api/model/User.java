@@ -104,10 +104,12 @@ public class User implements UserDetails, TransformableUser {
     @Column(name = "role")
     @Enumerated(value = EnumType.STRING)
     @JsonIgnore
+    @Builder.Default
     private Role role = Role.USER;
 
     @Column(name = "is_online")
     @NotNull
+    @Builder.Default
     private boolean online = false;
 
     @Column(name = "last_online")
