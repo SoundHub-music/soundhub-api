@@ -2,6 +2,7 @@ package com.soundhub.api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soundhub.api.Constants;
+import com.soundhub.api.exception.ApiException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,12 +57,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = extractTokenFromHeader(request.getHeader(Constants.AUTHORIZATION_HEADER_NAME));
 
-        if (isTokenInvalid(jwt, response)) {
+        if (isTokenInvalid(jwt)) {
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
             return;
         }
 
-        authenticateJwtToken(jwt, request, response);
+        try {
+            authenticateJwtToken(jwt, request);
+        } catch (ApiException exception) {
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, exception.getMessage());
+            return;
+        }
+
         filterChain.doFilter(request, response);
     }
 
@@ -86,11 +93,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /**
      * Checks if the token is null or blacklisted, and sends an error response if invalid.
      */
-    private boolean isTokenInvalid(String jwt, HttpServletResponse response) throws IOException {
+    private boolean isTokenInvalid(String jwt) {
         try {
             return jwt == null || isTokenBlacklisted(jwt);
         } catch (RedisConnectionFailureException e) {
-            sendErrorResponse(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Redis connection failure");
             return true;
         }
     }
@@ -109,7 +115,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /**
      * Authenticates JWT token and sets the authentication in the security context if valid.
      */
-    private void authenticateJwtToken(String jwt, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void authenticateJwtToken(String jwt, HttpServletRequest request) {
         try {
             String username = jwtService.extractUsername(jwt);
             if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
@@ -135,7 +141,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 context.setAuthentication(authToken);
             }
         } catch (Exception e) {
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication error");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
     }
 

@@ -90,5 +90,4 @@ public class AuthenticationService {
 
         return new LogoutResponse(Constants.SUCCESSFUL_LOGOUT);
     }
-
 }

@@ -49,7 +49,9 @@ public class UserCompatibilityServiceImpl implements UserCompatibilityService {
 
             float meanCompatibility = calculateMeanCompatibility(artistCompatibility, genreCompatibility);
 
-            compatibilityMap.put(userCompareWith, meanCompatibility);
+            if (meanCompatibility > 0) {
+                compatibilityMap.put(userCompareWith, meanCompatibility);
+            }
         });
 
         return compatibilityMap;
