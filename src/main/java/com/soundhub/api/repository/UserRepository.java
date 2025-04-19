@@ -18,10 +18,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE u.id IN :userIds")
     List<User> findByUserIds(List<UUID> userIds);
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) = LOWER(:firstName) OR LOWER(u.lastName) = LOWER(:lastName)")
-    List<User> findByFirstNameOrLastName(String firstName, String lastName);
+    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :firstName, '%')) OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))")
+    List<User> searchByFirstNameOrLastName(String firstName, String lastName);
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) = LOWER(:firstName) AND LOWER(u.lastName) = LOWER(:lastName)")
-    List<User> findByFirstNameAndLastName(String firstName, String lastName);
-
+    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :firstName, '%')) AND LOWER(u.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))")
+    List<User> searchByFirstNameAndLastName(String firstName, String lastName);
 }

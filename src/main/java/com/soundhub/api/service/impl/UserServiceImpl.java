@@ -219,11 +219,11 @@ public class UserServiceImpl implements UserService {
         if (name.contains(" ")) {
             String[] parts = name.split("\\s+");
             String firstName = parts[0];
-            String lastName = parts.length > 1 ? parts[1] : "";
+            String lastName = parts[1];
 
-            return userRepository.findByFirstNameAndLastName(firstName, lastName);
+            return userRepository.searchByFirstNameAndLastName(firstName, lastName);
         } else {
-            return userRepository.findByFirstNameOrLastName(name, name);
+            return userRepository.searchByFirstNameOrLastName(name, name);
         }
     }
 

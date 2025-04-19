@@ -30,23 +30,29 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
-
     private final String testEmail = "test@example.com";
     private final String testPassword = "password";
     private final String testToken = "test-token";
     private final String refreshToken = "refresh-token";
+
     @Mock
     private UserService userService;
+
     @Mock
     private JwtService jwtService;
+
     @Mock
     private BlacklistingService blacklistingService;
+    
     @Mock
     private RefreshTokenService refreshTokenService;
+
     @Mock
     private AuthenticationManager authenticationManager;
+
     @Mock
     private MultipartFile file;
+
     @InjectMocks
     private AuthenticationService authenticationService;
     private UserDto userDto;
