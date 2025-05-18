@@ -28,7 +28,7 @@ services:
       context: ..
     restart: always
     environment:
-      spring.redis.host: redis
+      spring.data.redis.host: redis
       token.signing.expirationInMs: 3600000
     ports:
       - "8080:8080"

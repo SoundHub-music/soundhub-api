@@ -1,4 +1,4 @@
-package com.soundhub.api.service.invite.strategy;
+package com.soundhub.api.service.strategies.invite;
 
 import com.soundhub.api.Constants;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package com.soundhub.api.service.invite.strategy;
+package com.soundhub.api.service.strategies.invite;
 
 import com.soundhub.api.Constants;
 import com.soundhub.api.enums.InviteStatus;
@@ -30,10 +30,10 @@ public class RejectInviteStrategy implements InviteStrategy {
      * Rejects an invitation.
      *
      * @param inviteRecipient The recipient of the invitation.
-     * @param inviteId The unique identifier of the invitation to reject.
+     * @param inviteId        The unique identifier of the invitation to reject.
      * @return The updated {@link Invite} object with its status set to {@code REJECTED}.
      * @throws ResourceNotFoundException If the invitation is not found in the repository.
-     * @throws ApiException If the provided recipient does not match the invitation's recipient.
+     * @throws ApiException              If the provided recipient does not match the invitation's recipient.
      */
     @Override
     public Invite execute(User inviteRecipient, UUID inviteId) {

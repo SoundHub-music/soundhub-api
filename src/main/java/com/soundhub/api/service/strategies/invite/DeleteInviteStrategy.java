@@ -1,4 +1,4 @@
-package com.soundhub.api.service.invite.strategy;
+package com.soundhub.api.service.strategies.invite;
 
 import com.soundhub.api.Constants;
 import com.soundhub.api.enums.InviteStatus;
@@ -29,11 +29,11 @@ public class DeleteInviteStrategy implements InviteStrategy {
     /**
      * Deletes an invitation.
      *
-     * @param sender The sender of the invitation.
+     * @param sender   The sender of the invitation.
      * @param inviteId The unique identifier of the invitation to delete.
      * @return The updated {@link Invite} object with its status set to {@code DELETED_BY_SENDER}.
      * @throws ResourceNotFoundException If the invitation is not found in the repository.
-     * @throws ApiException If the provided sender does not match the invitation's sender.
+     * @throws ApiException              If the provided sender does not match the invitation's sender.
      */
     @Override
     public Invite execute(User sender, UUID inviteId) {

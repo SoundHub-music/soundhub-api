@@ -8,7 +8,7 @@ import com.soundhub.api.model.Invite;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.InviteRepository;
 import com.soundhub.api.service.UserService;
-import com.soundhub.api.service.invite.strategy.AcceptInviteStrategy;
+import com.soundhub.api.service.strategies.invite.AcceptInviteStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

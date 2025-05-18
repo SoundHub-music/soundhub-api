@@ -1,4 +1,4 @@
-package com.soundhub.api.service.invite.strategy;
+package com.soundhub.api.service.strategies.invite;
 
 import com.soundhub.api.model.Invite;
 import com.soundhub.api.model.User;
@@ -20,8 +20,8 @@ public interface InviteStrategy {
      * @param inviteId the unique identifier of the invite to be processed.
      * @return the updated {@link Invite} object after the operation has been executed.
      * @throws com.soundhub.api.exception.ResourceNotFoundException if the invite with the specified ID is not found.
-     * @throws com.soundhub.api.exception.ApiException               if the user does not have the required permissions
-     *                                                               to perform the operation or if any other error occurs.
+     * @throws com.soundhub.api.exception.ApiException              if the user does not have the required permissions
+     *                                                              to perform the operation or if any other error occurs.
      */
     Invite execute(User user, UUID inviteId);
 }
