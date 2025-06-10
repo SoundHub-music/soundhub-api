@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 
 from controllers import routes
@@ -16,3 +17,6 @@ def add_exception_handlers():
 
 include_routers()
 add_exception_handlers()
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=8888, reload=True)

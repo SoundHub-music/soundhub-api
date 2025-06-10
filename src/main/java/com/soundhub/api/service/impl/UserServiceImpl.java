@@ -25,10 +25,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -249,16 +250,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getRecommendedFriends() {
         User currentUser = getCurrentUser();
-        List<User> potentialFriends = new ArrayList<>();
-        List<UUID> ids = recommendationService.getUsers(currentUser.getId());
-        List<User> rawFriends = getUsersByIds(ids);
+        Set<UUID> friends = currentUser.getFriends()
+                .stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
 
-        rawFriends.forEach(friend -> {
-            if (!currentUser.getFriends().contains(friend)) {
-                potentialFriends.add(friend);
-            }
-        });
+        List<UUID> ids = recommendationService.getRecommendedUsers(currentUser.getId());
 
-        return potentialFriends;
+        List<UUID> potentialFriends = ids.stream()
+                .filter(id -> !friends.contains(id))
+                .toList();
+
+        return userRepository.findAllById(potentialFriends);
     }
 }

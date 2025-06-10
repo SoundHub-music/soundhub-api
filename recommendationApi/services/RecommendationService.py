@@ -10,7 +10,6 @@ from exceptions.UserNotFoundException import UserNotFoundException
 from repository import GenreRepository
 from utils import logger
 
-
 class RecommendationService:
 	instance: Self | None = None
 
@@ -24,7 +23,6 @@ class RecommendationService:
 			cls.instance = super().__new__(cls)
 		return cls.instance
 
-
 	def __find_nearest_neighbours(self, favorite_genres: DataFrame, user_id: UUID):
 		# Преобразуем preferredGenres в формат, пригодный для машинного обучения
 		mlb = MultiLabelBinarizer()
@@ -33,7 +31,8 @@ class RecommendationService:
 		# Создаем модель для k ближайших соседей
 		knn: NearestNeighbors = NearestNeighbors(
 			n_neighbors=self.__neighbour_count,
-			algorithm='auto'
+			algorithm='auto',
+			metric = 'cosine',
 		).fit(genres_encoded)
 
 		user_index = favorite_genres.index[favorite_genres['user_id'] == user_id]
@@ -51,14 +50,12 @@ class RecommendationService:
 
 	def find_potential_friends(self, user_id: UUID) -> list[UUID]:
 		try:
-			favorite_genres: DataFrame = self.__genre_repository.get_favorite_genres()
+			# Группируем по user_id и собираем genres_id в список
+			favorite_genres = self.__genre_repository.get_favorite_genres_grouped_by_users()
+			registered_user_count: int = len(favorite_genres.index)
 
 			if user_id not in favorite_genres['user_id'].values:
 				raise UserNotFoundException(user_id)
-
-			# Группируем по user_id и собираем genres_id в список
-			favorite_genres = favorite_genres.groupby('user_id')['genre_id'].agg(list).reset_index()
-			registered_user_count: int = len(favorite_genres.index)
 
 			if self.__neighbour_count > registered_user_count:
 				self.__neighbour_count = registered_user_count

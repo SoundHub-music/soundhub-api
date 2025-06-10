@@ -27,8 +27,6 @@ public class UserCompatibilityServiceImpl implements UserCompatibilityService {
 
         Map<User, Float> compatibilityMap = calculateCompatibilityMap(userCompareTo, usersCompareWith);
 
-        log.debug("findCompatibilityPercentage[4]: list (userCompareWith: percent): {}", compatibilityMap);
-
         List<UserCompatibilityDto> userCompatibilityList = convertToDtoList(compatibilityMap);
 
         return new CompatibleUsersResponse(userCompatibilityList);
