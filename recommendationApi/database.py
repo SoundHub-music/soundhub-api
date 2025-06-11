@@ -2,9 +2,9 @@ from typing import Self
 
 from dotenv import dotenv_values
 from sqlalchemy import Engine, create_engine
+from sqlalchemy.engine.base import Connection
 
 from utils import logger
-
 
 class Database:
     instance: Self | None = None
@@ -17,10 +17,10 @@ class Database:
             cls.instance = super().__new__(cls)
         return cls.instance
 
-    def __enter__(self) -> Engine:
+    def __enter__(self) -> Connection:
         self.engine: Engine = self.get_db_connection()
         logger.info('Connected to database')
-        return self.engine
+        return self.engine.connect()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.engine.dispose()
