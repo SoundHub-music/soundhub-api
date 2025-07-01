@@ -19,36 +19,36 @@ import java.util.List;
 @RequestMapping("api/v1/files")
 @Slf4j
 public class FileController {
-    @Autowired
-    private FileService fileService;
+	@Autowired
+	private FileService fileService;
 
-    @Value("${project.staticFolder}")
-    private String staticFolder = "static/";
+	@Value("${media.folder.static}")
+	private String staticFolder;
 
-    @PostMapping("/upload")
-    public ResponseEntity<String> uploadFileHandler(@RequestPart MultipartFile file) throws IOException {
-        log.debug("uploadFileHandler[1]: received file is {}", file.getOriginalFilename());
+	@PostMapping("/upload")
+	public ResponseEntity<String> uploadFileHandler(@RequestPart MultipartFile file) throws IOException {
+		log.debug("uploadFileHandler[1]: received file is {}", file.getOriginalFilename());
 
-        String fileName = fileService.uploadFile(staticFolder, file);
-        log.debug("uploadFileHandler[2]: received file is {}", staticFolder);
+		String fileName = fileService.uploadFile(staticFolder, file);
 
-        return ResponseEntity.ok("File was uploaded: " + fileName);
-    }
+		return ResponseEntity.ok("File was uploaded: " + fileName);
+	}
 
-    @GetMapping("/{filename}")
-    public void serveFileHandler(
-            @PathVariable String filename,
-            @RequestParam String folderName,
-            HttpServletResponse httpServletResponse
-    ) throws IOException {
-        InputStream resourceFile = fileService.getResourceFile(folderName, filename);
-        httpServletResponse.setContentType(MediaType.ALL_VALUE);
-        StreamUtils.copy(resourceFile, httpServletResponse.getOutputStream());
-    }
+	@GetMapping("/{filename}")
+	public void getFile(
+			@PathVariable String filename,
+			@RequestParam String folderName,
+			HttpServletResponse httpServletResponse
+	) throws IOException {
+		InputStream resourceFile = fileService.getFile(folderName, filename);
 
-    @PostMapping("/upload/files")
-    public ResponseEntity<List<String>> uploadListFilesHandler(@RequestPart List<MultipartFile> files) {
-        List<String> fileNames = fileService.uploadFileList(staticFolder, files);
-        return ResponseEntity.ok(fileNames);
-    }
+		httpServletResponse.setContentType(MediaType.ALL_VALUE);
+		StreamUtils.copy(resourceFile, httpServletResponse.getOutputStream());
+	}
+
+	@PostMapping("/upload/files")
+	public ResponseEntity<List<String>> uploadListFilesHandler(@RequestPart List<MultipartFile> files) {
+		List<String> fileNames = fileService.uploadFileList(staticFolder, files);
+		return ResponseEntity.ok(fileNames);
+	}
 }

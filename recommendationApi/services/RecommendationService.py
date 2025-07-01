@@ -28,7 +28,6 @@ class RecommendationService:
 		mlb = MultiLabelBinarizer()
 		genres_encoded = mlb.fit_transform(favorite_genres['genre_id'])
 
-		# Создаем модель для k ближайших соседей
 		knn: NearestNeighbors = NearestNeighbors(
 			n_neighbors=self.__neighbour_count,
 			algorithm='auto',

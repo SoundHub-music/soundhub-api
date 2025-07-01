@@ -11,6 +11,9 @@ import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.FileService;
 import com.soundhub.api.service.RecommendationService;
 import com.soundhub.api.service.UserService;
+import com.soundhub.api.service.strategies.media.MediaFileSourceStrategy;
+import com.soundhub.api.service.strategies.media.MediaFileSourceStrategyFactory;
+import com.soundhub.api.util.FileUtils;
 import com.soundhub.api.util.mappers.UserMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +29,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,7 +36,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
-	private final String avatarFolderName;
+	@Value("${media.folder.avatars:avatars}")
+	private String avatarFolderName;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -51,17 +54,17 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private UserMapper userMapper;
 
-	public UserServiceImpl(@Value("${project.avatar:avatars}") String avatarFolderName) {
-		this.avatarFolderName = Objects.requireNonNullElse(avatarFolderName, "avatars/");
-	}
+	@Autowired
+	private MediaFileSourceStrategyFactory mediaFileSourceStrategyFactory;
 
 	@Override
 	public User addUser(UserDto userDto, MultipartFile file) throws IOException {
-		String avatarUrl = file == null ? null : fileService.uploadFile(avatarFolderName, file);
+		String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+		String avatarUrl = fileService.uploadFile(avatarFolderName, file);
 
 		User user = User.builder()
 				.email(userDto.getEmail())
-				.password(passwordEncoder.encode(userDto.getPassword()))
+				.password(encodedPassword)
 				.firstName(userDto.getFirstName())
 				.lastName(userDto.getLastName())
 				.birthday(userDto.getBirthday())
@@ -76,7 +79,9 @@ public class UserServiceImpl implements UserService {
 				.role(Role.USER)
 				.build();
 
-		return userRepository.save(user);
+		user = userRepository.save(user);
+
+		return user;
 	}
 
 	@Override
@@ -125,7 +130,7 @@ public class UserServiceImpl implements UserService {
 				);
 
 		String fileName = user.getAvatarUrl();
-		Files.deleteIfExists(fileService.getStaticFilePath(avatarFolderName, fileName));
+		Files.deleteIfExists(FileUtils.getStaticFilePath(avatarFolderName, fileName));
 
 		userRepository.delete(user);
 		return user.getId();
@@ -155,8 +160,8 @@ public class UserServiceImpl implements UserService {
 
 		if (file != null) {
 			if (fileName != null) {
-				boolean deleted = Files.deleteIfExists(fileService.getStaticFilePath(avatarFolderName, fileName));
-				log.debug("updateUser[1]: was avatar deleted = {}", deleted);
+				MediaFileSourceStrategy strategy = mediaFileSourceStrategyFactory.getStrategy();
+				strategy.deleteFile(avatarFolderName, fileName);
 			}
 
 			fileName = fileService.uploadFile(avatarFolderName, file);
@@ -211,14 +216,17 @@ public class UserServiceImpl implements UserService {
 	public List<User> getUserFriendsById(UUID id) {
 		log.info("getUserFriendsById[1]: getting user's: {} friends", id);
 		User user = getUserById(id);
+
 		log.info("getUserFriendsById[2]: user: {}", user);
 		log.info("getUserFriendsById[3]: user's friends: {}", user.getFriends());
+
 		return user.getFriends();
 	}
 
 	@Override
 	public List<User> searchByFullName(String name) {
 		log.info("searchByFullName[1]: searching users with name: {}", name);
+
 		if (name.contains(" ")) {
 			String[] parts = name.split("\\s+");
 			String firstName = parts[0];
@@ -241,6 +249,7 @@ public class UserServiceImpl implements UserService {
 
 		currentOnline = !currentOnline;
 		currentUser.setOnline(currentOnline);
+
 		LocalDateTime lastOnline = !currentOnline ? LocalDateTime.now() : null;
 
 		currentUser.setLastOnline(lastOnline);

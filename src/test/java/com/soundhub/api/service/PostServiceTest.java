@@ -7,6 +7,7 @@ import com.soundhub.api.model.Post;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.PostRepository;
 import com.soundhub.api.service.impl.PostServiceImpl;
+import com.soundhub.api.service.strategies.media.MediaFileSourceStrategyFactory;
 import com.soundhub.api.util.mappers.PostMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,155 +27,158 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest extends BaseTest {
 
-    @InjectMocks
-    private PostServiceImpl postService;
+	@InjectMocks
+	private PostServiceImpl postService;
 
-    @Mock
-    private PostRepository postRepository;
+	@Mock
+	private PostRepository postRepository;
 
-    @Mock
-    private UserService userService;
+	@Mock
+	private UserService userService;
 
-    @Mock
-    private PostMapper postMapper;
+	@Mock
+	private MediaFileSourceStrategyFactory mediaFileSourceStrategyFactory;
 
-    private UUID postId;
-    private UUID authorId;
-    private PostDto postDto;
-    private Post post;
+	@Mock
+	private PostMapper postMapper;
 
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        postId = UUID.randomUUID();
-        authorId = UUID.randomUUID();
-        initUser();
-        user.setId(authorId);
+	private UUID postId;
+	private UUID authorId;
+	private PostDto postDto;
+	private Post post;
 
-        postDto = PostDto.builder()
-                .id(postId)
-                .author(user)
-                .images(new ArrayList<>())
-                .content("Test content")
-                .build();
+	@BeforeEach
+	public void setUp() {
+		MockitoAnnotations.openMocks(this);
+		postId = UUID.randomUUID();
+		authorId = UUID.randomUUID();
+		initUser();
+		user.setId(authorId);
 
-        post = Post.builder()
-                .id(postId)
-                .author(user)
-                .images(new ArrayList<>())
-                .content("Test content")
-                .likes(Set.of(user))
-                .build();
-    }
+		postDto = PostDto.builder()
+				.id(postId)
+				.author(user)
+				.images(new ArrayList<>())
+				.content("Test content")
+				.build();
 
-    @Test
-    public void testAddPost_Positive() {
-        when(userService.getCurrentUser()).thenReturn(user);
-        when(postRepository.save(any(Post.class))).thenReturn(post);
+		post = Post.builder()
+				.id(postId)
+				.author(user)
+				.images(new ArrayList<>())
+				.content("Test content")
+				.likes(Set.of(user))
+				.build();
+	}
 
-        Post result = postService.addPost(postDto, null);
+	@Test
+	public void testAddPost_Positive() {
+		when(userService.getCurrentUser()).thenReturn(user);
+		when(postRepository.save(any(Post.class))).thenReturn(post);
 
-        assertEquals(post, result);
-        verify(postRepository, times(1)).save(any(Post.class));
-    }
+		Post result = postService.addPost(postDto, null);
 
-    @Test
-    public void testAddPost_Negative() {
-        when(userService.getCurrentUser()).thenReturn(user);
-        when(postRepository.save(any(Post.class))).thenThrow(new RuntimeException("Database error"));
+		assertEquals(post, result);
+		verify(postRepository, times(1)).save(any(Post.class));
+	}
 
-        assertThrows(RuntimeException.class, () -> postService.addPost(postDto, null));
-    }
+	@Test
+	public void testAddPost_Negative() {
+		when(userService.getCurrentUser()).thenReturn(user);
+		when(postRepository.save(any(Post.class))).thenThrow(new RuntimeException("Database error"));
 
-    @Test
-    public void testToggleLike_Positive() {
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-        when(postRepository.save(any(Post.class))).thenReturn(post);
+		assertThrows(RuntimeException.class, () -> postService.addPost(postDto, null));
+	}
 
-        Post result = postService.toggleLike(postId, user);
+	@Test
+	public void testToggleLike_Positive() {
+		when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+		when(postRepository.save(any(Post.class))).thenReturn(post);
 
-        assertEquals(post, result);
-        verify(postRepository, times(1)).save(any(Post.class));
-    }
+		Post result = postService.toggleLike(postId, user);
 
-    @Test
-    public void testToggleLike_Negative() {
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+		assertEquals(post, result);
+		verify(postRepository, times(1)).save(any(Post.class));
+	}
 
-        assertThrows(ResourceNotFoundException.class, () -> postService.toggleLike(postId, user));
-    }
+	@Test
+	public void testToggleLike_Negative() {
+		when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
-    @Test
-    public void testGetPostById_Positive() {
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+		assertThrows(ResourceNotFoundException.class, () -> postService.toggleLike(postId, user));
+	}
 
-        Post result = postService.getPostById(postId);
+	@Test
+	public void testGetPostById_Positive() {
+		when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
-        assertEquals(post, result);
-    }
+		Post result = postService.getPostById(postId);
 
-    @Test
-    public void testGetPostById_Negative() {
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+		assertEquals(post, result);
+	}
 
-        assertThrows(ResourceNotFoundException.class, () -> postService.getPostById(postId));
-    }
+	@Test
+	public void testGetPostById_Negative() {
+		when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
-    @Test
-    public void testDeletePost_Positive() {
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-        when(userService.getCurrentUser()).thenReturn(user);
-        
-        UUID result = postService.deletePost(postId);
+		assertThrows(ResourceNotFoundException.class, () -> postService.getPostById(postId));
+	}
 
-        assertEquals(postId, result);
-        verify(postRepository, times(1)).delete(any(Post.class));
-    }
+	@Test
+	public void testDeletePost_Positive() {
+		when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+		when(userService.getCurrentUser()).thenReturn(user);
 
-    @Test
-    public void testDeletePost_Negative() {
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+		UUID result = postService.deletePost(postId);
 
-        assertThrows(ResourceNotFoundException.class, () -> postService.deletePost(postId));
-    }
+		assertEquals(postId, result);
+		verify(postRepository, times(1)).delete(any(Post.class));
+	}
 
-    @Test
-    public void testUpdatePost_Positive() {
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-        when(userService.getCurrentUser()).thenReturn(user);
-        when(postService.updatePost(postId, postDto)).thenReturn(post);
+	@Test
+	public void testDeletePost_Negative() {
+		when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
-        Post result = postService.updatePost(postId, postDto);
+		assertThrows(ResourceNotFoundException.class, () -> postService.deletePost(postId));
+	}
 
-        assertEquals(post, result);
-        verify(postRepository, times(1)).save(any(Post.class));
-    }
+	@Test
+	public void testUpdatePost_Positive() {
+		when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+		when(userService.getCurrentUser()).thenReturn(user);
+		when(postService.updatePost(postId, postDto)).thenReturn(post);
 
-    @Test
-    public void testUpdatePost_Negative() {
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+		Post result = postService.updatePost(postId, postDto);
 
-        assertThrows(ResourceNotFoundException.class, () -> postService.updatePost(postId, postDto));
-    }
+		assertEquals(post, result);
+		verify(postRepository, times(1)).save(any(Post.class));
+	}
 
-    @Test
-    public void testGetPostsByAuthor_Positive() {
-        when(userService.getUserById(authorId)).thenReturn(user);
-        when(postRepository.findAllByAuthor(any(User.class))).thenReturn(Collections.singletonList(post));
+	@Test
+	public void testUpdatePost_Negative() {
+		when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
-        List<Post> result = postService.getPostsByAuthor(authorId);
+		assertThrows(ResourceNotFoundException.class, () -> postService.updatePost(postId, postDto));
+	}
 
-        assertEquals(1, result.size());
-        assertEquals(post, result.get(0));
-    }
+	@Test
+	public void testGetPostsByAuthor_Positive() {
+		when(userService.getUserById(authorId)).thenReturn(user);
+		when(postRepository.findAllByAuthor(any(User.class))).thenReturn(Collections.singletonList(post));
 
-    @Test
-    public void testGetPostsByAuthor_Negative() {
-        when(userService.getUserById(authorId)).thenReturn(user);
-        when(postRepository.findAllByAuthor(any(User.class))).thenReturn(Collections.emptyList());
+		List<Post> result = postService.getPostsByAuthor(authorId);
 
-        List<Post> result = postService.getPostsByAuthor(authorId);
+		assertEquals(1, result.size());
+		assertEquals(post, result.get(0));
+	}
 
-        assertEquals(0, result.size());
-    }
+	@Test
+	public void testGetPostsByAuthor_Negative() {
+		when(userService.getUserById(authorId)).thenReturn(user);
+		when(postRepository.findAllByAuthor(any(User.class))).thenReturn(Collections.emptyList());
+
+		List<Post> result = postService.getPostsByAuthor(authorId);
+
+		assertEquals(0, result.size());
+	}
 }
