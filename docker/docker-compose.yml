@@ -1,3 +1,4 @@
+name: soundhub
 services:
   db:
     image: postgres:15
@@ -26,13 +27,9 @@ services:
     build:
       dockerfile: ./docker/Dockerfile
       context: ..
-    restart: always
-    environment:
-      spring.data.redis.host: redis
-      token.signing.expirationInMs: 3600000
+    restart: on-failure
     ports:
       - "8080:8080"
-      - "8888:8888"
     depends_on:
       - db
       - redis

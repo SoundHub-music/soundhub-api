@@ -1,4 +1,5 @@
-*.properties
+application.yaml
+application.properties
 /__pycache/
 
 /target/
@@ -186,3 +187,7 @@ target
 .gradle
 README.html
 .exercism
+
+/src/main/resources/static/
+/web/
+/flyway.properties

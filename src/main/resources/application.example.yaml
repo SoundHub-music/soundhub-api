@@ -1,0 +1,73 @@
+base:
+    url: url
+spring:
+    flyway:
+        enabled: 'false'
+        schemas: migrations
+        baselineOnMigrate: 'true'
+        locations: classpath:db/migration
+        url: database-url
+        user: database-user
+        password: database-password
+    jpa:
+        hibernate:
+            ddl-auto: update
+    datasource:
+        driver-class-name: database-driver # org.postgresql.Driver
+        password: database-password
+        username: database-user
+        url: database-url # jdbc:postgresql://localhost:5432/dbname
+    cache:
+        type: redis
+    data:
+        redis:
+            host: redis # localhost
+            port: '6379'
+    servlet:
+        multipart:
+            max-file-size: 20MB
+            max-request-size: 20MB
+    web:
+        resources:
+            add-mappings: 'false'
+refreshToken:
+    expirationInMs: '604800000'
+s3: # config for cloud.ru
+    region: region
+    key:
+        id: key-id
+        secret: key-secret
+    endpoint: endpoint
+    bucket:
+        tenantId: tenant-id
+        name: bucket-name
+recommendation:
+    url: url
+logging:
+    level:
+        com:
+            soundhub:
+                api: DEBUG
+        org:
+            hibernate:
+                transaction: DEBUG
+            springframework:
+                transaction: DEBUG
+media:
+    source: s3 # or local
+    folder:
+        posts: posts/
+        genres: genres/
+        avatars: avatars/
+        static: static/
+project:
+    #    Production
+    resources:
+        path: resources
+    #    Development
+#    resources:
+#        path: src/main/resources
+token:
+    signing:
+        expirationInMs: '3600000'
+        key: key
