@@ -1,6 +1,7 @@
 package com.soundhub.api.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.soundhub.api.exception.ApiException;
@@ -8,6 +9,8 @@ import com.soundhub.api.model.User;
 import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.RecommendationService;
 import com.soundhub.api.service.UserService;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +32,14 @@ import java.util.stream.Collectors;
 
 import static com.soundhub.api.Constants.REQUEST_TIMEOUT;
 import static com.soundhub.api.Constants.SERVICE_IS_UNAVAILABLE;
+
+@AllArgsConstructor
+@Getter
+class KafkaResponseException extends Throwable {
+	private final String errorType;
+	private final int statusCode;
+	private final String detail;
+}
 
 @Service
 @Slf4j
@@ -90,9 +101,59 @@ public class RecommendationServiceImpl implements RecommendationService {
 		} catch (InterruptedException | ExecutionException e) {
 			log.error("recommendUsers[3]: error: {}", e.getMessage());
 
+			Throwable cause = e.getCause();
+
+			if (cause instanceof KafkaResponseException) {
+				throw new ApiException(HttpStatus.BAD_REQUEST, ((KafkaResponseException) cause).getDetail());
+			}
+
 			throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, SERVICE_IS_UNAVAILABLE);
 		} finally {
 			pendingRequests.remove(requestId);
+		}
+	}
+
+	@KafkaListener(
+			topics = "${spring.kafka.error-topic}",
+			groupId = "${spring.kafka.recommendation.group}"
+	)
+	private void handleRecommendationError(
+			@Payload String payload,
+			@Header(KafkaHeaders.CORRELATION_ID) String messageKey,
+			@Header("origin_topic") String originalTopic
+	) {
+		if (!RECOMMENDATION_PRODUCER_TOPIC.equals(originalTopic)) {
+			return;
+		}
+
+		log.error("handleRecommendationError[1]: payload: {}", payload);
+		CompletableFuture<List<UUID>> futureResponse = pendingRequests.get(messageKey);
+
+		KafkaResponseException exception = parseKafkaResponseException(payload);
+
+		if (futureResponse != null) {
+			futureResponse.completeExceptionally(exception);
+		}
+	}
+
+	private KafkaResponseException parseKafkaResponseException(String json) {
+		try {
+			String cleanJson = json.trim();
+			if (cleanJson.startsWith("\"") && cleanJson.endsWith("\"")) {
+				cleanJson = cleanJson.substring(1, cleanJson.length() - 1);
+			}
+
+			cleanJson = cleanJson.replace("\\\"", "\"");
+
+			JsonNode root = objectMapper.readTree(cleanJson);
+			return new KafkaResponseException(
+					root.path("error_type").asText(),
+					root.path("status_code").asInt(),
+					root.path("detail").asText()
+			);
+		} catch (JsonProcessingException e) {
+			log.error("Failed to parse error JSON. Original: {}. Error: {}", json, e.getMessage());
+			throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid error format: " + e.getMessage());
 		}
 	}
 
