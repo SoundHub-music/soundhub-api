@@ -17,94 +17,95 @@ import java.util.UUID;
 import static org.mockito.Mockito.mock;
 
 @SpringBootTest(properties = {
-        "project.resources.path=src/test/resources",
-        "project.staticFolder=static/",
-        "refreshToken.expirationInMs=604800000"
+		"project.resources.path=src/test/resources",
+		"media.folder.static=static/",
+		"refreshToken.expirationInMs=604800000"
 })
 public class BaseTest {
-    protected final String fileFolder = "uploads";
-    protected UUID chatId;
-    protected UUID anotherChatId;
-    protected UUID userId;
-    protected UUID anotherUserId;
-    protected User user;
-    protected User anotherUser;
-    protected UserDto userDto;
-    protected Chat anotherChat;
-    protected Chat chat;
-    @Value("${project.resources.path}")
-    protected String resourcesPath;
+	protected final String fileFolder = "uploads";
+	protected UUID chatId;
+	protected UUID anotherChatId;
+	protected UUID userId;
+	protected UUID anotherUserId;
+	protected User user;
+	protected User anotherUser;
+	protected UserDto userDto;
+	protected Chat anotherChat;
+	protected Chat chat;
 
-    @Value("${project.staticFolder}")
-    protected String staticFolder;
+	@Value("${project.resources.path}")
+	protected String resourcesPath;
 
-    protected String accessToken, bearerToken;
+	@Value("${media.folder.static}")
+	protected String staticFolder;
 
-    @Autowired
-    private JwtService jwtService;
+	protected String accessToken, bearerToken;
 
-    protected void generateAccessToken(User user) {
-        accessToken = jwtService.generateToken(user);
-        bearerToken = "Bearer " + accessToken;
-    }
+	@Autowired
+	private JwtService jwtService;
 
-    protected void initUserDto() {
-        MultipartFile file = mock(MultipartFile.class);
+	protected void generateAccessToken(User user) {
+		accessToken = jwtService.generateToken(user);
+		bearerToken = "Bearer " + accessToken;
+	}
 
-        userDto = UserDto.builder()
-                .id(userId)
-                .email("vasya.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Vasya")
-                .avatarUrl(file.getOriginalFilename())
-                .lastName("Pupkin")
-                .birthday(LocalDate.of(2000, 5, 15))
-                .build();
-    }
+	protected void initUserDto() {
+		MultipartFile file = mock(MultipartFile.class);
 
-    protected void initUser() {
-        anotherUserId = UUID.randomUUID();
-        userId = UUID.randomUUID();
+		userDto = UserDto.builder()
+				.id(userId)
+				.email("vasya.pupkin@gmail.com")
+				.password("testPassword")
+				.firstName("Vasya")
+				.avatarUrl(file.getOriginalFilename())
+				.lastName("Pupkin")
+				.birthday(LocalDate.of(2000, 5, 15))
+				.build();
+	}
 
-        user = User.builder()
-                .id(UUID.randomUUID())
-                .email("vasya.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Vasya")
-                .lastName("Pupkin")
-                .avatarUrl("avatar.jpg")
-                .birthday(LocalDate.of(2000, 5, 15))
-                .role(Role.USER)
-                .build();
+	protected void initUser() {
+		anotherUserId = UUID.randomUUID();
+		userId = UUID.randomUUID();
 
-        anotherUser = User.builder()
-                .id(UUID.randomUUID())
-                .email("another.pupkin@gmail.com")
-                .password("testPassword")
-                .firstName("Oleg")
-                .lastName("Pupkin")
-                .avatarUrl("avatar.jpg")
-                .birthday(LocalDate.of(2005, 5, 15))
-                .role(Role.USER)
-                .build();
-    }
+		user = User.builder()
+				.id(UUID.randomUUID())
+				.email("vasya.pupkin@gmail.com")
+				.password("testPassword")
+				.firstName("Vasya")
+				.lastName("Pupkin")
+				.avatarUrl("avatar.jpg")
+				.birthday(LocalDate.of(2000, 5, 15))
+				.role(Role.USER)
+				.build();
 
-    protected void initChat() {
-        chatId = UUID.randomUUID();
-        anotherChatId = UUID.randomUUID();
+		anotherUser = User.builder()
+				.id(UUID.randomUUID())
+				.email("another.pupkin@gmail.com")
+				.password("testPassword")
+				.firstName("Oleg")
+				.lastName("Pupkin")
+				.avatarUrl("avatar.jpg")
+				.birthday(LocalDate.of(2005, 5, 15))
+				.role(Role.USER)
+				.build();
+	}
 
-        anotherChat = Chat.builder()
-                .id(anotherChatId)
-                .createdBy(anotherUser)
-                .isGroup(false)
-                .participants(List.of(anotherUser))
-                .build();
+	protected void initChat() {
+		chatId = UUID.randomUUID();
+		anotherChatId = UUID.randomUUID();
 
-        chat = Chat.builder()
-                .id(chatId)
-                .createdBy(user)
-                .isGroup(false)
-                .participants(List.of(user))
-                .build();
-    }
+		anotherChat = Chat.builder()
+				.id(anotherChatId)
+				.createdBy(anotherUser)
+				.isGroup(false)
+				.participants(List.of(anotherUser))
+				.build();
+
+		chat = Chat.builder()
+				.id(chatId)
+				.createdBy(user)
+				.isGroup(false)
+				.participants(List.of(user))
+				.build();
+	}
 }

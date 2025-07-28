@@ -9,7 +9,6 @@ import com.soundhub.api.exception.ResourceNotFoundException;
 import com.soundhub.api.model.User;
 import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.FileService;
-import com.soundhub.api.service.RecommendationService;
 import com.soundhub.api.service.UserService;
 import com.soundhub.api.service.strategies.media.MediaFileSourceStrategy;
 import com.soundhub.api.service.strategies.media.MediaFileSourceStrategyFactory;
@@ -29,9 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -44,9 +41,6 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private FileService fileService;
-
-	@Autowired
-	private RecommendationService recommendationService;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -256,22 +250,5 @@ public class UserServiceImpl implements UserService {
 
 		userRepository.save(currentUser);
 		return currentUser;
-	}
-
-	@Override
-	public List<User> getRecommendedFriends() {
-		User currentUser = getCurrentUser();
-		Set<UUID> friends = currentUser.getFriends()
-				.stream()
-				.map(User::getId)
-				.collect(Collectors.toSet());
-
-		List<UUID> ids = recommendationService.getRecommendedUsers(currentUser.getId());
-
-		List<UUID> potentialFriends = ids.stream()
-				.filter(id -> !friends.contains(id))
-				.toList();
-
-		return userRepository.findAllById(potentialFriends);
 	}
 }

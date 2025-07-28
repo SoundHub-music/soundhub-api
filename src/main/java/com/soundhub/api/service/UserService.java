@@ -10,35 +10,33 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
-    User addUser(UserDto userDto, MultipartFile file) throws IOException;
+	User addUser(UserDto userDto, MultipartFile file) throws IOException;
 
-    User addFriend(UUID friendId);
+	User addFriend(UUID friendId);
 
-    User deleteFriend(UUID friendId) throws IOException;
+	User deleteFriend(UUID friendId) throws IOException;
 
-    User getUserById(UUID id);
+	User getUserById(UUID id);
 
-    UUID deleteUser(UUID userId) throws IOException;
+	UUID deleteUser(UUID userId) throws IOException;
 
-    UserDto updateUser(UUID userId, UserDto userDto) throws IOException;
+	UserDto updateUser(UUID userId, UserDto userDto) throws IOException;
 
-    UserDto updateUser(UUID userId, UserDto userDto, MultipartFile file) throws IOException;
+	UserDto updateUser(UUID userId, UserDto userDto, MultipartFile file) throws IOException;
 
-    List<User> getUsersByIds(List<UUID> ids);
+	List<User> getUsersByIds(List<UUID> ids);
 
-    User getUserByEmail(String email);
+	User getUserByEmail(String email);
 
-    Boolean checkEmailAvailability(String email);
+	Boolean checkEmailAvailability(String email);
 
-    UserExistenceResponse checkUserExistence(String email);
+	UserExistenceResponse checkUserExistence(String email);
 
-    User getCurrentUser();
+	User getCurrentUser();
 
-    List<User> getUserFriendsById(UUID id);
+	List<User> getUserFriendsById(UUID id);
 
-    List<User> searchByFullName(String name);
+	List<User> searchByFullName(String name);
 
-    User updateUserOnline(boolean online);
-
-    List<User> getRecommendedFriends();
+	User updateUserOnline(boolean online);
 }

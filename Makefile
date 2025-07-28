@@ -5,6 +5,7 @@ PROJECT_ROOT = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 DOCKER_FOLDER = $(PROJECT_ROOT)/docker
 COMPOSE_FILE = $(DOCKER_FOLDER)/docker-compose.yml
 MAVEN_IMAGE = maven:3.8.6-openjdk-11
+PROJECT_NETWORK = soundhub_app_network
 
 .PHONY: help clean build rebuild up start stop down logs ps restart maven-build env-up env-down
 
@@ -67,7 +68,13 @@ start:  ## Start existing services
 
 run:
 	@echo "Starting services in detached mode..."
-	docker-compose -f $(COMPOSE_FILE) up -d
+	@if ! docker network inspect $(PROJECT_NETWORK) >/dev/null 2>&1; then \
+		echo "Creating app network..."; \
+		docker network create --label com.docker.compose.network=app_network $(PROJECT_NETWORK); \
+	else \
+		echo "Using existing network (soundhub_app_network)"; \
+	fi
+	@docker-compose -f $(COMPOSE_FILE) up -d || (echo "Failed to start services"; exit 1)
 
 stop:  ## Stop running services
 	@echo "Stopping containers..."

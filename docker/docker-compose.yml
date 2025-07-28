@@ -1,43 +1,68 @@
 name: soundhub
 services:
-  db:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-    ports:
-      - "5433:5432"
-    networks:
-      - app_network
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./genres.sql:/docker-entrypoint-initdb.d/genres.sql
+    zookeeper:
+        image: confluentinc/cp-zookeeper:7.2.1
+        ports:
+          - "2182:2181"
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+        networks:
+          - app_network
+    kafka:
+        image: confluentinc/cp-kafka:7.2.1
+        ports:
+          - "9093:9092"
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+            KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        depends_on:
+          - zookeeper
+        networks:
+          - app_network
+    db:
+        image: postgres:15
+        restart: on-failure
+        environment:
+          POSTGRES_USER: ${POSTGRES_USER}
+          POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+          POSTGRES_DB: ${POSTGRES_DB}
+          POSTGRES_HOST: ${POSTGRES_HOST}
+        ports:
+          - "5433:5432"
+        networks:
+          - app_network
+        volumes:
+          - postgres_data:/var/lib/postgresql/data
+          - ./genres.sql:/docker-entrypoint-initdb.d/genres.sql
 
-  redis:
-    image: redis:7
-    ports:
-      - "6380:6379"
-    networks:
-      - app_network
+    redis:
+        image: redis:7
+        ports:
+          - "6380:6379"
+        networks:
+          - app_network
 
-  soundhub-api:
-    build:
-      dockerfile: ./docker/Dockerfile
-      context: ..
-    restart: on-failure
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-      - redis
-    networks:
-      - app_network
+    soundhub-api:
+        build:
+          dockerfile: ./docker/Dockerfile
+          context: ..
+        restart: on-failure
+        ports:
+          - "8080:8080"
+        depends_on:
+          - db
+          - redis
+        networks:
+          - app_network
 
 volumes:
-  postgres_data:
+    postgres_data:
 
 networks:
-  app_network:
+    app_network:

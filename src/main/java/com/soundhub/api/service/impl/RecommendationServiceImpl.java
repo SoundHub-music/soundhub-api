@@ -1,47 +1,135 @@
 package com.soundhub.api.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.soundhub.api.exception.ApiException;
+import com.soundhub.api.model.User;
+import com.soundhub.api.repository.UserRepository;
 import com.soundhub.api.service.RecommendationService;
+import com.soundhub.api.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
+
+import static com.soundhub.api.Constants.REQUEST_TIMEOUT;
+import static com.soundhub.api.Constants.SERVICE_IS_UNAVAILABLE;
 
 @Service
 @Slf4j
 public class RecommendationServiceImpl implements RecommendationService {
-    @Value("${recommendation.url}")
-    private String recommendationApi;
+	private final Map<String, CompletableFuture<List<UUID>>> pendingRequests = new ConcurrentHashMap<>();
 
-    @Override
-    public List<UUID> getRecommendedUsers(UUID userId) {
-        log.info("recommendUsers[1]: searching friends for user with id: {}", userId);
+	@Value("${spring.kafka.recommendation.request-topic}")
+	String RECOMMENDATION_PRODUCER_TOPIC;
 
-        if (recommendationApi == null) {
-            throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Recommendation service is unavailable.");
-        }
+	@Autowired
+	private UserRepository userRepository;
 
-        String url = recommendationApi + "/" + userId;
-        RestTemplate restTemplate = new RestTemplate();
+	@Autowired
+	private UserService userService;
 
-        ParameterizedTypeReference<List<UUID>> responseType = new ParameterizedTypeReference<>() {
-        };
+	@Autowired
+	private KafkaTemplate<String, String> kafkaTemplate;
 
-        ResponseEntity<List<UUID>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                responseType
-        );
+	@Autowired
+	private ObjectMapper objectMapper;
 
-        return response.getBody();
-    }
+	@Override
+	public List<User> getRecommendedUsers() {
+		User currentUser = userService.getCurrentUser();
+		UUID userId = currentUser.getId();
+
+		log.info("recommendUsers[1]: searching friends for user with id: {}", userId);
+
+		Set<UUID> friendIds = currentUser.getFriends()
+				.stream()
+				.map(User::getId)
+				.collect(Collectors.toSet());
+
+		String requestId = UUID.randomUUID().toString();
+		CompletableFuture<List<UUID>> futureResponse = new CompletableFuture<>();
+
+		pendingRequests.put(requestId, futureResponse);
+
+		kafkaTemplate.send(
+				MessageBuilder.withPayload(userId)
+						.setHeader(KafkaHeaders.TOPIC, RECOMMENDATION_PRODUCER_TOPIC)
+						.setHeader(KafkaHeaders.KEY, requestId)
+						.build()
+		);
+
+		try {
+			List<UUID> response = futureResponse.get(5, TimeUnit.SECONDS);
+
+			List<UUID> potentialFriends = response.stream()
+					.filter(id -> !friendIds.contains(id))
+					.toList();
+
+			return userRepository.findAllById(potentialFriends);
+
+		} catch (TimeoutException e) {
+			log.error("recommendUsers[2]: error: {}", e.getMessage());
+
+			throw new ApiException(HttpStatus.REQUEST_TIMEOUT, REQUEST_TIMEOUT);
+		} catch (InterruptedException | ExecutionException e) {
+			log.error("recommendUsers[3]: error: {}", e.getMessage());
+
+			throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, SERVICE_IS_UNAVAILABLE);
+		} finally {
+			pendingRequests.remove(requestId);
+		}
+	}
+
+	@KafkaListener(
+			topics = "${spring.kafka.recommendation.response-topic}",
+			groupId = "${spring.kafka.recommendation.group}"
+	)
+	private void handleRecommendationResponse(
+			@Payload String payload,
+			@Header(KafkaHeaders.CORRELATION_ID) String messageKey
+	) {
+		log.debug("handleRecommendationResponse[1]: payload: {}", payload);
+
+		CompletableFuture<List<UUID>> future = pendingRequests.get(messageKey);
+
+		if (future != null) {
+			List<UUID> parsedList = parseJsonToUuidList(payload);
+
+			future.complete(parsedList);
+		}
+
+	}
+
+	private List<UUID> parseJsonToUuidList(String json) {
+		try {
+			log.debug("parseJsonToUuidList[1]: json: {}", json);
+
+			String innerJson = objectMapper.readValue(json, String.class);
+			CollectionType collectionType = objectMapper
+					.getTypeFactory()
+					.constructCollectionType(List.class, UUID.class);
+
+			return objectMapper.readValue(innerJson, collectionType);
+		} catch (JsonProcessingException e) {
+			log.error("parseJsonToUuidList[1]: error: {}", e.getMessage());
+			return List.of();
+		}
+	}
 }
 

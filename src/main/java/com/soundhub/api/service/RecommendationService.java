@@ -1,8 +1,9 @@
 package com.soundhub.api.service;
 
+import com.soundhub.api.model.User;
+
 import java.util.List;
-import java.util.UUID;
 
 public interface RecommendationService {
-    List<UUID> getRecommendedUsers(UUID user);
+	List<User> getRecommendedUsers();
 }

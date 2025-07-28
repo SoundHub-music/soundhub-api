@@ -1,5 +1,6 @@
 package com.soundhub.api.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soundhub.api.Constants;
 import com.soundhub.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class ApplicationConfig {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 		authProvider.setUserDetailsService(userDetailsService());
 		authProvider.setPasswordEncoder(passwordEncoder());
+
 		return authProvider;
 	}
 
@@ -43,5 +45,10 @@ public class ApplicationConfig {
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
 		return configuration.getAuthenticationManager();
+	}
+
+	@Bean
+	public ObjectMapper objectMapper() {
+		return new ObjectMapper();
 	}
 }
