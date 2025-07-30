@@ -56,8 +56,6 @@ s3: # config for cloud.ru
 	bucket:
 		tenantId: tenant-id
 		name: bucket-name
-recommendation:
-	url: url
 logging:
 	level:
 		com:
@@ -80,8 +78,8 @@ project:
 	resources:
 		path: resources
 	#    Development
-#    resources:
-#        path: src/main/resources
+	#resources:
+	#	path: src/main/resources
 token:
 	signing:
 		expirationInMs: '3600000'
