@@ -5,8 +5,6 @@
 
 ### Переменные окружения
 
-Ниже представлен пример переменных окружения сервиса.
-
 Важно отметить, что в качестве хоста базы данных, redis, kafka служат названия соответствующих сервисов из конфигурации Docker Compose основного проекта.
 Для локальной разработки и тестирования используется `localhost`
 
@@ -16,61 +14,50 @@
 Примечание: в качестве S3 хранилища использовался сервис cloud.ru, поэтому переменные s3 могут немного отличаться от AWS S3.
 ```yaml
 host:
-	url: http://192.168.3.5:8080
+	url: url
 spring:
 	flyway:
 		enabled: 'false'
 		schemas: migrations
 		baselineOnMigrate: 'true'
 		locations: classpath:db/migration
-		url: jdbc:postgresql://db:5432/soundhub
-		user: postgres
-		password: postgres
-	kafka:
-		# docker
-		# bootstrap-servers: kafka:9092
-		bootstrap-servers: localhost:9092
-		error-topic: error
-		recommendation:
-			group: 'group.user.recommendation'
-			request-topic: 'request.user.recommendation'
-			response-topic: 'response.user.recommendation'
+		url: database-url
+		user: database-user
+		password: database-password
 	jpa:
 		hibernate:
 			ddl-auto: update
 	datasource:
-		driver-class-name: org.postgresql.Driver
-		password: postgres
-		username: postgres
-		# docker
-		# url: jdbc:postgresql://db:5432/soundhub
-		url: jdbc:postgresql://localhost:5432/soundhub
+		driver-class-name: database-driver # org.postgresql.Driver
+		password: database-password
+		username: database-user
+		url: database-url # jdbc:postgresql://localhost:5432/dbname
 	cache:
 		type: redis
 	data:
 		redis:
-			# docker
-			# host: redis
-			host: localhost
-			port: 6379
+			host: redis # localhost
+			port: '6379'
 	servlet:
 		multipart:
 			max-file-size: 20MB
 			max-request-size: 20MB
 	web:
 		resources:
-			add-mappings: false
+			add-mappings: 'false'
 refreshToken:
-	expirationInMs: 604800000
-s3:
+	expirationInMs: '604800000'
+s3: # config for cloud.ru
 	region: region
 	key:
-		id: id
-		secret: secret
-	endpoint: https://s3.bucket.com
+		id: key-id
+		secret: key-secret
+	endpoint: endpoint
 	bucket:
-		tenantId: tenantId
-		name: bucketName
+		tenantId: tenant-id
+		name: bucket-name
+recommendation:
+	url: url
 logging:
 	level:
 		com:
@@ -82,7 +69,7 @@ logging:
 			springframework:
 				transaction: DEBUG
 media:
-	source: s3
+	source: s3 # or local
 	folder:
 		posts: posts/
 		genres: genres/
@@ -90,15 +77,16 @@ media:
 		static: static/
 project:
 	#    Production
-	#    resources:
-	#        path: resources
 	resources:
-		path: src/main/resources
+		path: resources
+	#    Development
+#    resources:
+#        path: src/main/resources
 token:
 	signing:
-		expirationInMs: 3600000
-#		HS256
+		expirationInMs: '3600000'
 		key: key
+
 ```
 
 `env` файл, лежащий в папке `docker`. Необходим для проброса переменных БД в сервис базы данных.
