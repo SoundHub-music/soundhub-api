@@ -17,31 +17,30 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice(basePackageClasses = {UserController.class})
 class UserControllerPreHandler extends AbstractResponseBodyAdvice<UserDto> {
-    @Autowired
-    private FileUrlTransformer urlTransformer;
+	@Autowired
+	private FileUrlTransformer urlTransformer;
 
+	@Override
+	public Object beforeBodyWrite(
+			@Nullable Object body,
+			MethodParameter returnType,
+			MediaType selectedContentType,
+			Class selectedConverterType,
+			ServerHttpRequest request,
+			ServerHttpResponse response
+	) {
+		if (body == null) {
+			return body;
+		}
 
-    @Override
-    public Object beforeBodyWrite(
-            @Nullable Object body,
-            MethodParameter returnType,
-            MediaType selectedContentType,
-            Class selectedConverterType,
-            ServerHttpRequest request,
-            ServerHttpResponse response
-    ) {
-        if (body == null) {
-            return body;
-        }
+		try {
+			UserTransformHandler handler = new UserTransformHandler(urlTransformer);
+			handler.transform(body);
 
-        try {
-            UserTransformHandler handler = new UserTransformHandler(urlTransformer);
-            handler.transform(body);
+		} catch (IllegalArgumentException e) {
+			log.error("beforeBodyWrite[1]: {}", e.getMessage());
+		}
 
-        } catch (IllegalArgumentException e) {
-            log.error("beforeBodyWrite[1]: {}", e.getMessage());
-        }
-
-        return body;
-    }
+		return body;
+	}
 }

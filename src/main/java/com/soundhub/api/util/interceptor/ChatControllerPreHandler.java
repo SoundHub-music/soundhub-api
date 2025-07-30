@@ -15,29 +15,28 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice(basePackageClasses = {ChatController.class})
 public class ChatControllerPreHandler extends AbstractResponseBodyAdvice<Chat> {
-    @Autowired
-    private FileUrlTransformer urlTransformer;
+	@Autowired
+	private FileUrlTransformer urlTransformer;
 
+	@Override
+	public Object beforeBodyWrite(
+			Object body,
+			MethodParameter returnType,
+			MediaType selectedContentType,
+			Class selectedConverterType,
+			ServerHttpRequest request, ServerHttpResponse response
+	) {
+		if (body == null) {
+			return null;
+		}
 
-    @Override
-    public Object beforeBodyWrite(
-            Object body,
-            MethodParameter returnType,
-            MediaType selectedContentType,
-            Class selectedConverterType,
-            ServerHttpRequest request, ServerHttpResponse response
-    ) {
-        if (body == null) {
-            return null;
-        }
+		try {
+			ChatTransformHandler handler = new ChatTransformHandler(urlTransformer);
+			handler.transform(body);
+		} catch (IllegalArgumentException e) {
+			log.error("beforeBodyWrite[1]: {}", e.getMessage());
+		}
 
-        try {
-            ChatTransformHandler handler = new ChatTransformHandler(urlTransformer);
-            handler.transform(body);
-        } catch (IllegalArgumentException e) {
-            log.error("beforeBodyWrite[1]: {}", e.getMessage());
-        }
-
-        return body;
-    }
+		return body;
+	}
 }
