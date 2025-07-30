@@ -1,7 +1,7 @@
 package com.soundhub.api.util.interceptors.url.transformers;
 
-import com.soundhub.api.model.Post;
-import com.soundhub.api.service.ValueTransformer;
+import com.soundhub.api.models.Post;
+import com.soundhub.api.services.ValueTransformer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;

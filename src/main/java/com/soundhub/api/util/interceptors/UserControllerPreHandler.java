@@ -1,8 +1,8 @@
 package com.soundhub.api.util.interceptors;
 
-import com.soundhub.api.controller.UserController;
+import com.soundhub.api.controllers.UserController;
 import com.soundhub.api.dto.UserDto;
-import com.soundhub.api.service.impl.FileUrlTransformer;
+import com.soundhub.api.services.impl.FileUrlTransformer;
 import com.soundhub.api.util.interceptors.url.transformers.UserTransformHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

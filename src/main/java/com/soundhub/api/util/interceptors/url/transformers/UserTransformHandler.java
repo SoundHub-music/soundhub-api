@@ -1,9 +1,9 @@
 package com.soundhub.api.util.interceptors.url.transformers;
 
-import com.soundhub.api.model.Genre;
-import com.soundhub.api.model.TransformableUser;
-import com.soundhub.api.model.User;
-import com.soundhub.api.service.ValueTransformer;
+import com.soundhub.api.models.Genre;
+import com.soundhub.api.models.TransformableUser;
+import com.soundhub.api.models.User;
+import com.soundhub.api.services.ValueTransformer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;

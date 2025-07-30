@@ -8,9 +8,9 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.soundhub.api.Constants;
 import com.soundhub.api.enums.Gender;
-import com.soundhub.api.model.Genre;
-import com.soundhub.api.model.TransformableUser;
-import com.soundhub.api.model.User;
+import com.soundhub.api.models.Genre;
+import com.soundhub.api.models.TransformableUser;
+import com.soundhub.api.models.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,44 +30,45 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class UserDto implements TransformableUser {
-    private UUID id;
-    @NotBlank
-    @Size(max = 254)
-    @Email
-    private String email;
+	private UUID id;
 
-    @NotBlank
-    @Size(min = 8)
-    private String password;
+	@NotBlank
+	@Size(max = 254)
+	@Email
+	private String email;
 
-    @NotBlank
-    @Size(min = 2, max = 255)
-    private String firstName;
+	@NotBlank
+	@Size(min = 8)
+	private String password;
 
-    @NotBlank
-    @Size(min = 2, max = 255)
-    private String lastName;
+	@NotBlank
+	@Size(min = 2, max = 255)
+	private String firstName;
 
-    @NotNull
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonSerialize(using = LocalDateSerializer.class)
-    private LocalDate birthday;
+	@NotBlank
+	@Size(min = 2, max = 255)
+	private String lastName;
 
-    private String city;
-    private String country;
-    private Gender gender;
-    private String avatarUrl;
-    private String description;
-    private List<String> languages;
-    private List<User> friends;
-    private List<Genre> favoriteGenres;
-    private List<UUID> favoriteArtistsMbids;
+	@NotNull
+	@JsonDeserialize(using = LocalDateDeserializer.class)
+	@JsonSerialize(using = LocalDateSerializer.class)
+	private LocalDate birthday;
 
-    @NotNull
-    @Builder.Default
-    private boolean online = false;
+	private String city;
+	private String country;
+	private Gender gender;
+	private String avatarUrl;
+	private String description;
+	private List<String> languages;
+	private List<User> friends;
+	private List<Genre> favoriteGenres;
+	private List<UUID> favoriteArtistsMbids;
 
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonFormat(pattern = Constants.LOCAL_DATETIME_FORMAT)
-    private LocalDateTime lastOnline;
+	@NotNull
+	@Builder.Default
+	private boolean online = false;
+
+	@JsonSerialize(using = LocalDateTimeSerializer.class)
+	@JsonFormat(pattern = Constants.LOCAL_DATETIME_FORMAT)
+	private LocalDateTime lastOnline;
 }

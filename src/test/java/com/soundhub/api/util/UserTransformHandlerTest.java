@@ -1,9 +1,9 @@
 package com.soundhub.api.util;
 
-import com.soundhub.api.model.Genre;
-import com.soundhub.api.model.TransformableUser;
-import com.soundhub.api.model.User;
-import com.soundhub.api.service.ValueTransformer;
+import com.soundhub.api.models.Genre;
+import com.soundhub.api.models.TransformableUser;
+import com.soundhub.api.models.User;
+import com.soundhub.api.services.ValueTransformer;
 import com.soundhub.api.util.interceptors.url.transformers.UserTransformHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

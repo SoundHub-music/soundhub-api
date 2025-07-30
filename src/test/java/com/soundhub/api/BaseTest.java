@@ -2,8 +2,8 @@ package com.soundhub.api;
 
 import com.soundhub.api.dto.UserDto;
 import com.soundhub.api.enums.Role;
-import com.soundhub.api.model.Chat;
-import com.soundhub.api.model.User;
+import com.soundhub.api.models.Chat;
+import com.soundhub.api.models.User;
 import com.soundhub.api.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

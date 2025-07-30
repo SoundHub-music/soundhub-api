@@ -1,8 +1,8 @@
 package com.soundhub.api.util.interceptors;
 
-import com.soundhub.api.controller.ChatController;
-import com.soundhub.api.model.Chat;
-import com.soundhub.api.service.impl.FileUrlTransformer;
+import com.soundhub.api.controllers.ChatController;
+import com.soundhub.api.models.Chat;
+import com.soundhub.api.services.impl.FileUrlTransformer;
 import com.soundhub.api.util.interceptors.url.transformers.ChatTransformHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

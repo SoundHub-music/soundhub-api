@@ -1,8 +1,8 @@
 package com.soundhub.api.util.interceptors.url.transformers;
 
-import com.soundhub.api.model.Chat;
-import com.soundhub.api.model.User;
-import com.soundhub.api.service.ValueTransformer;
+import com.soundhub.api.models.Chat;
+import com.soundhub.api.models.User;
+import com.soundhub.api.services.ValueTransformer;
 
 import java.util.Collection;
 import java.util.List;

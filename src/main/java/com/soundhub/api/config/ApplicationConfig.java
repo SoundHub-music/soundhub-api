@@ -2,7 +2,7 @@ package com.soundhub.api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soundhub.api.Constants;
-import com.soundhub.api.repository.UserRepository;
+import com.soundhub.api.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

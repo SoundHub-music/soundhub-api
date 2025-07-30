@@ -1,6 +1,6 @@
 package com.soundhub.api.dto.response;
 
-import com.soundhub.api.model.Message;
+import com.soundhub.api.models.Message;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class UnreadMessagesResponse {
-    private List<Message> messages;
-    private int count;
+	private List<Message> messages;
+	private int count;
 }

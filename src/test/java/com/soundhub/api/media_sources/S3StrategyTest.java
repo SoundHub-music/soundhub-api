@@ -1,8 +1,8 @@
 package com.soundhub.api.media_sources;
 
-import com.soundhub.api.exception.ApiException;
-import com.soundhub.api.exception.ResourceNotFoundException;
-import com.soundhub.api.service.strategies.media.S3MediaFileSource;
+import com.soundhub.api.exceptions.ApiException;
+import com.soundhub.api.exceptions.ResourceNotFoundException;
+import com.soundhub.api.services.strategies.media.S3MediaFileSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

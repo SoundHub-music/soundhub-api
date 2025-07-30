@@ -1,8 +1,8 @@
 package com.soundhub.api.media_sources;
 
-import com.soundhub.api.exception.ApiException;
-import com.soundhub.api.exception.ResourceNotFoundException;
-import com.soundhub.api.service.strategies.media.LocalMediaFileSource;
+import com.soundhub.api.exceptions.ApiException;
+import com.soundhub.api.exceptions.ResourceNotFoundException;
+import com.soundhub.api.services.strategies.media.LocalMediaFileSource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;

@@ -2,7 +2,7 @@ package com.soundhub.api.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soundhub.api.Constants;
-import com.soundhub.api.exception.ApiException;
+import com.soundhub.api.exceptions.ApiException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,123 +32,123 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final List<String> PUBLIC_ENDPOINTS = Arrays.stream(Constants.ENDPOINT_WHITELIST)
-            .map(endpoint -> endpoint.replace("/**", ""))
-            .toList();
+	private static final ObjectMapper MAPPER = new ObjectMapper();
+	private static final List<String> PUBLIC_ENDPOINTS = Arrays.stream(Constants.ENDPOINT_WHITELIST)
+			.map(endpoint -> endpoint.replace("/**", ""))
+			.toList();
 
-    private final JwtService jwtService;
-    private final BlacklistingService blacklistingService;
-    private final UserDetailsService userDetailsService;
+	private final JwtService jwtService;
+	private final BlacklistingService blacklistingService;
+	private final UserDetailsService userDetailsService;
 
-    /**
-     * Main filter method to process incoming requests and handle JWT authentication.
-     */
-    @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
-        if (isPermittedEndpoint(request)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+	/**
+	 * Main filter method to process incoming requests and handle JWT authentication.
+	 */
+	@Override
+	protected void doFilterInternal(
+			@NonNull HttpServletRequest request,
+			@NonNull HttpServletResponse response,
+			@NonNull FilterChain filterChain
+	) throws ServletException, IOException {
+		if (isPermittedEndpoint(request)) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 
-        String jwt = extractTokenFromHeader(request.getHeader(Constants.AUTHORIZATION_HEADER_NAME));
+		String jwt = extractTokenFromHeader(request.getHeader(Constants.AUTHORIZATION_HEADER_NAME));
 
-        if (isTokenInvalid(jwt)) {
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-            return;
-        }
+		if (isTokenInvalid(jwt)) {
+			sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+			return;
+		}
 
-        try {
-            authenticateJwtToken(jwt, request);
-        } catch (ApiException exception) {
-            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, exception.getMessage());
-            return;
-        }
+		try {
+			authenticateJwtToken(jwt, request);
+		} catch (ApiException exception) {
+			sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, exception.getMessage());
+			return;
+		}
 
-        filterChain.doFilter(request, response);
-    }
+		filterChain.doFilter(request, response);
+	}
 
-    /**
-     * Checks if the endpoint does not require authentication.
-     */
-    private boolean isPermittedEndpoint(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        return PUBLIC_ENDPOINTS.stream().anyMatch(uri::startsWith);
-    }
+	/**
+	 * Checks if the endpoint does not require authentication.
+	 */
+	private boolean isPermittedEndpoint(HttpServletRequest request) {
+		String uri = request.getRequestURI();
+		return PUBLIC_ENDPOINTS.stream().anyMatch(uri::startsWith);
+	}
 
-    /**
-     * Extracts the JWT token from the Authorization header.
-     */
-    private String extractTokenFromHeader(String header) {
-        if (header != null && header.startsWith(Constants.BEARER_PREFIX)) {
-            return header.substring(Constants.BEARER_PREFIX.length());
-        }
-        return null;
-    }
+	/**
+	 * Extracts the JWT token from the Authorization header.
+	 */
+	private String extractTokenFromHeader(String header) {
+		if (header != null && header.startsWith(Constants.BEARER_PREFIX)) {
+			return header.substring(Constants.BEARER_PREFIX.length());
+		}
+		return null;
+	}
 
-    /**
-     * Checks if the token is null or blacklisted, and sends an error response if invalid.
-     */
-    private boolean isTokenInvalid(String jwt) {
-        try {
-            return jwt == null || isTokenBlacklisted(jwt);
-        } catch (RedisConnectionFailureException e) {
-            return true;
-        }
-    }
+	/**
+	 * Checks if the token is null or blacklisted, and sends an error response if invalid.
+	 */
+	private boolean isTokenInvalid(String jwt) {
+		try {
+			return jwt == null || isTokenBlacklisted(jwt);
+		} catch (RedisConnectionFailureException e) {
+			return true;
+		}
+	}
 
-    /**
-     * Sends an error response in JSON format.
-     */
-    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
-        ProblemDetail errorResponse = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(status), message);
-        PrintWriter writer = response.getWriter();
-        response.setStatus(status);
-        writer.write(MAPPER.writeValueAsString(errorResponse));
-        writer.flush();
-    }
+	/**
+	 * Sends an error response in JSON format.
+	 */
+	private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
+		ProblemDetail errorResponse = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(status), message);
+		PrintWriter writer = response.getWriter();
+		response.setStatus(status);
+		writer.write(MAPPER.writeValueAsString(errorResponse));
+		writer.flush();
+	}
 
-    /**
-     * Authenticates JWT token and sets the authentication in the security context if valid.
-     */
-    private void authenticateJwtToken(String jwt, HttpServletRequest request) {
-        try {
-            String username = jwtService.extractUsername(jwt);
-            if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
-                return;
-            }
+	/**
+	 * Authenticates JWT token and sets the authentication in the security context if valid.
+	 */
+	private void authenticateJwtToken(String jwt, HttpServletRequest request) {
+		try {
+			String username = jwtService.extractUsername(jwt);
+			if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+				return;
+			}
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                SecurityContext context = SecurityContextHolder.getContext();
-                var authorities = userDetails.getAuthorities();
+			if (jwtService.isTokenValid(jwt, userDetails)) {
+				SecurityContext context = SecurityContextHolder.getContext();
+				var authorities = userDetails.getAuthorities();
 
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        authorities
-                );
+				var authToken = new UsernamePasswordAuthenticationToken(
+						userDetails,
+						null,
+						authorities
+				);
 
-                WebAuthenticationDetails authDetails = new WebAuthenticationDetailsSource()
-                        .buildDetails(request);
+				WebAuthenticationDetails authDetails = new WebAuthenticationDetailsSource()
+						.buildDetails(request);
 
-                authToken.setDetails(authDetails);
-                context.setAuthentication(authToken);
-            }
-        } catch (Exception e) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, e.getMessage());
-        }
-    }
+				authToken.setDetails(authDetails);
+				context.setAuthentication(authToken);
+			}
+		} catch (Exception e) {
+			throw new ApiException(HttpStatus.UNAUTHORIZED, e.getMessage());
+		}
+	}
 
-    /**
-     * Checks if the token is blacklisted in Redis.
-     */
-    private boolean isTokenBlacklisted(String jwt) throws RedisConnectionFailureException {
-        return blacklistingService.getJwtBlacklist(jwt) != null;
-    }
+	/**
+	 * Checks if the token is blacklisted in Redis.
+	 */
+	private boolean isTokenBlacklisted(String jwt) throws RedisConnectionFailureException {
+		return blacklistingService.getJwtBlacklist(jwt) != null;
+	}
 }

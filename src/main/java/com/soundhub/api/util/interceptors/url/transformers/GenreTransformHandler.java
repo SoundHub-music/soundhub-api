@@ -1,7 +1,7 @@
 package com.soundhub.api.util.interceptors.url.transformers;
 
-import com.soundhub.api.model.Genre;
-import com.soundhub.api.service.ValueTransformer;
+import com.soundhub.api.models.Genre;
+import com.soundhub.api.services.ValueTransformer;
 
 import java.util.Collection;
 

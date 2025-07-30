@@ -1,6 +1,6 @@
 package com.soundhub.api.security;
 
-import com.soundhub.api.model.User;
+import com.soundhub.api.models.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -16,17 +16,17 @@ import java.time.Instant;
 @Getter
 @Builder
 public class RefreshToken {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
 
-    @Column
-    @NotBlank(message = "Enter refresh token value")
-    private String refreshToken;
+	@Column
+	@NotBlank(message = "Enter refresh token value")
+	private String refreshToken;
 
-    @Column(nullable = false)
-    private Instant expirationTime;
+	@Column(nullable = false)
+	private Instant expirationTime;
 
-    @OneToOne
-    private User user;
+	@OneToOne
+	private User user;
 }

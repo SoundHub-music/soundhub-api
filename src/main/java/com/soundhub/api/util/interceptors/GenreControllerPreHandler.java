@@ -1,8 +1,8 @@
 package com.soundhub.api.util.interceptors;
 
-import com.soundhub.api.controller.GenreController;
-import com.soundhub.api.model.Genre;
-import com.soundhub.api.service.impl.FileUrlTransformer;
+import com.soundhub.api.controllers.GenreController;
+import com.soundhub.api.models.Genre;
+import com.soundhub.api.services.impl.FileUrlTransformer;
 import com.soundhub.api.util.interceptors.url.transformers.GenreTransformHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
