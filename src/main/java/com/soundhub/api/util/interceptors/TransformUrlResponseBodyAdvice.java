@@ -1,24 +1,33 @@
-package com.soundhub.api.util.interceptor;
+package com.soundhub.api.util.interceptors;
 
+import com.soundhub.api.util.interceptors.url.transformers.ObjectTransformHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
 
-public abstract class AbstractResponseBodyAdvice<T> implements ResponseBodyAdvice<Object> {
-
+@Slf4j
+public class TransformUrlResponseBodyAdvice<T> implements ResponseBodyAdvice<Object> {
 	private final Class<T> targetType;
+	private final ObjectTransformHandler objectTransformHandler;
 
-	protected AbstractResponseBodyAdvice() {
+	TransformUrlResponseBodyAdvice(ObjectTransformHandler valueTransformer) {
+		this.objectTransformHandler = valueTransformer;
 		this.targetType = getGenericType();
 	}
 
 	@SuppressWarnings("unchecked")
 	private Class<T> getGenericType() {
 		Type genericSuperclass = getClass().getGenericSuperclass();
+
 		if (genericSuperclass instanceof ParameterizedType parameterizedType) {
 			Type type = parameterizedType.getActualTypeArguments()[0];
 
@@ -44,5 +53,28 @@ public abstract class AbstractResponseBodyAdvice<T> implements ResponseBodyAdvic
 		}
 
 		return isTargetType && isInResponse;
+	}
+
+	@Override
+	public Object beforeBodyWrite(
+			@Nullable Object body,
+			MethodParameter returnType,
+			MediaType selectedContentType,
+			Class selectedConverterType,
+			ServerHttpRequest request,
+			ServerHttpResponse response
+	) {
+		if (body == null) {
+			return null;
+		}
+
+		try {
+			objectTransformHandler.transform(body);
+
+		} catch (IllegalArgumentException e) {
+			log.error("beforeBodyWrite[1]: {}", e.getMessage());
+		}
+
+		return body;
 	}
 }
