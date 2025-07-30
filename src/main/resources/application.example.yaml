@@ -1,4 +1,4 @@
-base:
+host:
     url: url
 spring:
     flyway:
