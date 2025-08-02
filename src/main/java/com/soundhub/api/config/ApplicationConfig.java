@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.soundhub.api.Constants;
 import com.soundhub.api.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -50,5 +54,11 @@ public class ApplicationConfig {
 	@Bean
 	public ObjectMapper objectMapper() {
 		return new ObjectMapper();
+	}
+
+	@Bean
+	@Lazy
+	public KafkaAdmin kafkaAdmin(KafkaProperties kafkaProperties, SslBundles sslBundles) {
+		return new KafkaAdmin(kafkaProperties.buildAdminProperties(sslBundles));
 	}
 }

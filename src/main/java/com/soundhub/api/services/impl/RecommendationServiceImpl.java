@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.KafkaException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -78,12 +79,16 @@ public class RecommendationServiceImpl implements RecommendationService {
 
 		pendingRequests.put(requestId, futureResponse);
 
-		kafkaTemplate.send(
-				MessageBuilder.withPayload(userId)
-						.setHeader(KafkaHeaders.TOPIC, RECOMMENDATION_PRODUCER_TOPIC)
-						.setHeader(KafkaHeaders.KEY, requestId)
-						.build()
-		);
+		try {
+			kafkaTemplate.send(
+					MessageBuilder.withPayload(userId)
+							.setHeader(KafkaHeaders.TOPIC, RECOMMENDATION_PRODUCER_TOPIC)
+							.setHeader(KafkaHeaders.KEY, requestId)
+							.build()
+			);
+		} catch (KafkaException error) {
+			throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, error.getMessage());
+		}
 
 		try {
 			List<UUID> response = futureResponse.get(5, TimeUnit.SECONDS);
@@ -97,7 +102,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 		} catch (TimeoutException e) {
 			log.error("recommendUsers[2]: error: {}", e.getMessage());
 
-			throw new ApiException(HttpStatus.REQUEST_TIMEOUT, REQUEST_TIMEOUT);
+			throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, REQUEST_TIMEOUT);
 		} catch (InterruptedException | ExecutionException e) {
 			log.error("recommendUsers[3]: error: {}", e.getMessage());
 

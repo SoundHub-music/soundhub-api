@@ -91,6 +91,7 @@ public class UserServiceImpl implements UserService {
 
 		userRepository.save(user);
 		userRepository.save(newFriend);
+
 		return user;
 	}
 
@@ -103,8 +104,10 @@ public class UserServiceImpl implements UserService {
 				);
 
 		user.getFriends().remove(delFriend);
-		log.info("deleteFriend[1]: Friend deleted successfully ID {}", friendId);
 		updateUser(user.getId(), userMapper.userToUserDto(user));
+
+		log.info("deleteFriend[1]: Friend deleted successfully ID {}", friendId);
+
 		return user;
 	}
 
@@ -127,6 +130,7 @@ public class UserServiceImpl implements UserService {
 		Files.deleteIfExists(FileUtils.getStaticFilePath(avatarFolderName, fileName));
 
 		userRepository.delete(user);
+
 		return user.getId();
 	}
 
@@ -140,6 +144,7 @@ public class UserServiceImpl implements UserService {
 
 		userMapper.updateUserFromDto(userDto, user);
 		userRepository.save(user);
+
 		return userMapper.userToUserDto(user);
 	}
 
@@ -190,8 +195,9 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserExistenceResponse checkUserExistence(String email) {
-		if (!email.matches(Constants.EMAIL_REGEX))
+		if (!email.matches(Constants.EMAIL_REGEX)) {
 			throw new ApiException(HttpStatus.BAD_REQUEST, Constants.INVALID_EMAIL);
+		}
 
 		boolean isUserExists = checkEmailAvailability(email);
 		return new UserExistenceResponse(isUserExists);
@@ -227,9 +233,9 @@ public class UserServiceImpl implements UserService {
 			String lastName = parts[1];
 
 			return userRepository.searchByFirstNameAndLastName(firstName, lastName);
-		} else {
-			return userRepository.searchByFirstNameOrLastName(name, name);
 		}
+
+		return userRepository.searchByFirstNameOrLastName(name, name);
 	}
 
 	@Override
