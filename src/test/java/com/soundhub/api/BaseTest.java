@@ -32,6 +32,7 @@ public class BaseTest {
 	protected UserDto userDto;
 	protected Chat anotherChat;
 	protected Chat chat;
+	protected List<User> users;
 
 	@Value("${project.resources.path}")
 	protected String resourcesPath;
@@ -61,6 +62,10 @@ public class BaseTest {
 				.lastName("Pupkin")
 				.birthday(LocalDate.of(2000, 5, 15))
 				.build();
+	}
+
+	protected void initUsers() {
+		users = List.of(user, anotherUser);
 	}
 
 	protected void initUser() {

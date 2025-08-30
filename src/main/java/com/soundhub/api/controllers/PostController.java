@@ -30,12 +30,14 @@ public class PostController {
 	public ResponseEntity<Post> getPostById(@PathVariable UUID postId) {
 		Post post = postService.getPostById(postId);
 		log.info("getPostById[1] controller: Post has successfully found by ID: {}", postId);
+
 		return new ResponseEntity<>(post, HttpStatus.OK);
 	}
 
 	@GetMapping("/post/{authorId}")
 	public ResponseEntity<List<Post>> getAllPostsByAuthor(@PathVariable UUID authorId) {
 		log.info("getAllPostsByAuthor[1] controller: Find posts by author ID: {}", authorId);
+
 		return ResponseEntity.ok(postService.getPostsByAuthor(authorId));
 	}
 
@@ -63,22 +65,26 @@ public class PostController {
 	) throws IOException {
 		if ((files == null) && (deleteFiles == null)) {
 			log.info("updatePost[1] controller: Post updated without files, post ID: {}", postId);
+
 			return ResponseEntity.ok(postService.updatePost(postId, postDto));
-		} else {
-			log.info("updatePost[1] controller: Post updated with files add/replace, post ID: {}", postId);
-			return ResponseEntity.ok(postService.updatePost(postId, postDto, files, deleteFiles));
 		}
+
+		log.info("updatePost[1] controller: Post updated with files add/replace, post ID: {}", postId);
+
+		return ResponseEntity.ok(postService.updatePost(postId, postDto, files, deleteFiles));
 	}
 
 	@PutMapping("/like/{postId}")
 	public ResponseEntity<Post> toggleLike(@PathVariable UUID postId) {
 		log.info("toggleLike[1] controller: Like added to post ID: {}", postId);
+
 		return ResponseEntity.ok(postService.toggleLike(postId, userService.getCurrentUser()));
 	}
 
 	@DeleteMapping("/delete/{postId}")
 	public ResponseEntity<UUID> deletePost(@PathVariable UUID postId) {
 		log.info("deletePost[1] controller: Post deleted post ID: {}", postId);
+
 		return ResponseEntity.ok(postService.deletePost(postId));
 	}
 }

@@ -38,9 +38,10 @@ public class UserController {
 	@GetMapping("/{userId}")
 	public ResponseEntity<UserDto> getUserById(@PathVariable UUID userId) {
 		User user = userService.getUserById(userId);
-		return new ResponseEntity<>(userMapper.userToUserDto(user), HttpStatus.OK);
-	}
+		UserDto userDto = userMapper.userToUserDto(user);
 
+		return new ResponseEntity<>(userDto, HttpStatus.OK);
+	}
 
 	@GetMapping("/checkUser/{email}")
 	public ResponseEntity<UserExistenceResponse> checkEmailAvailability(@PathVariable String email) {
@@ -81,7 +82,10 @@ public class UserController {
 
 	@PutMapping("/deleteFriend/{friendId}")
 	public ResponseEntity<UserDto> deleteFriend(@PathVariable UUID friendId) throws IOException {
-		return ResponseEntity.ok(userMapper.userToUserDto(userService.deleteFriend(friendId)));
+		User user = userService.deleteFriend(friendId);
+		UserDto userDto = userMapper.userToUserDto(user);
+
+		return ResponseEntity.ok(userDto);
 	}
 
 	@GetMapping("/recommendedFriends")

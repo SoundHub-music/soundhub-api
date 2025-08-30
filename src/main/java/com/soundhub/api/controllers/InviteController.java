@@ -4,7 +4,6 @@ import com.soundhub.api.models.Invite;
 import com.soundhub.api.models.User;
 import com.soundhub.api.services.InviteService;
 import com.soundhub.api.services.UserService;
-import com.soundhub.api.util.mappers.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,42 +24,54 @@ public class InviteController {
 	@Autowired
 	private InviteService inviteService;
 
-	@Autowired
-	private UserMapper userMapper;
-
 	@PostMapping("/create/{recipientId}")
 	public ResponseEntity<Invite> createInvite(@PathVariable UUID recipientId) {
 		User currentUser = userService.getCurrentUser();
 		User recipient = userService.getUserById(recipientId);
-		return new ResponseEntity<>(inviteService.createInvite(currentUser, recipient), HttpStatus.OK);
+		Invite invite = inviteService.createInvite(currentUser, recipient);
+
+		return new ResponseEntity<>(invite, HttpStatus.OK);
 	}
 
 	@PostMapping("/accept/{inviteId}")
 	public ResponseEntity<Invite> acceptInvite(@PathVariable UUID inviteId) throws IOException {
 		User currentUser = userService.getCurrentUser();
-		return new ResponseEntity<>(inviteService.acceptInvite(currentUser, inviteId), HttpStatus.OK);
+		Invite acceptedInvite = inviteService.acceptInvite(currentUser, inviteId);
+
+		return new ResponseEntity<>(acceptedInvite, HttpStatus.OK);
 	}
 
 	@PostMapping("/reject/{inviteId}")
 	public ResponseEntity<Invite> rejectInvite(@PathVariable UUID inviteId) {
 		User currentUser = userService.getCurrentUser();
-		return new ResponseEntity<>(inviteService.rejectInvite(currentUser, inviteId), HttpStatus.OK);
+		Invite rejectedInvite = inviteService.rejectInvite(currentUser, inviteId);
+
+		return new ResponseEntity<>(rejectedInvite, HttpStatus.OK);
 	}
 
 	@GetMapping
 	public ResponseEntity<List<Invite>> getAllInvites() {
 		User currentUser = userService.getCurrentUser();
-		return new ResponseEntity<>(inviteService.getAllInvites(currentUser), HttpStatus.OK);
+		List<Invite> invites = inviteService.getAllInvites(currentUser);
+
+		return new ResponseEntity<>(invites, HttpStatus.OK);
 	}
 
 	@DeleteMapping("/{inviteId}")
 	public ResponseEntity<Invite> deleteInvite(@PathVariable UUID inviteId) {
 		User currentUser = userService.getCurrentUser();
-		return new ResponseEntity<>(inviteService.deleteInvite(currentUser, inviteId), HttpStatus.OK);
+		Invite deletedInvite = inviteService.deleteInvite(currentUser, inviteId);
+
+		return new ResponseEntity<>(deletedInvite, HttpStatus.OK);
 	}
 
 	@GetMapping("/{senderId}/{recipientId}")
-	public ResponseEntity<Invite> getInviteBySenderAndRecipient(@PathVariable UUID senderId, @PathVariable UUID recipientId) {
-		return new ResponseEntity<>(inviteService.getInviteBySenderAndRecipient(senderId, recipientId), HttpStatus.OK);
+	public ResponseEntity<Invite> getInviteBySenderAndRecipient(
+			@PathVariable UUID senderId,
+			@PathVariable UUID recipientId
+	) {
+		Invite invite = inviteService.getInviteBySenderAndRecipient(senderId, recipientId);
+
+		return new ResponseEntity<>(invite, HttpStatus.OK);
 	}
 }

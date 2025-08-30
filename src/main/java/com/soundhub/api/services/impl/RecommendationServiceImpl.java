@@ -1,17 +1,14 @@
 package com.soundhub.api.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import com.soundhub.api.exceptions.ApiException;
+import com.soundhub.api.exceptions.KafkaResponseException;
 import com.soundhub.api.models.User;
 import com.soundhub.api.repositories.UserRepository;
 import com.soundhub.api.services.RecommendationService;
 import com.soundhub.api.services.UserService;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.soundhub.api.util.KafkaResponseParser;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,43 +21,42 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-import static com.soundhub.api.Constants.REQUEST_TIMEOUT;
-import static com.soundhub.api.Constants.SERVICE_IS_UNAVAILABLE;
-
-@AllArgsConstructor
-@Getter
-class KafkaResponseException extends Throwable {
-	private final String errorType;
-	private final int statusCode;
-	private final String detail;
-}
+import static com.soundhub.api.Constants.*;
 
 @Service
 @Slf4j
 public class RecommendationServiceImpl implements RecommendationService {
 	private final Map<String, CompletableFuture<List<UUID>>> pendingRequests = new ConcurrentHashMap<>();
 
-	@Value("${spring.kafka.recommendation.request-topic}")
-	String RECOMMENDATION_PRODUCER_TOPIC;
+	private final String RECOMMENDATION_PRODUCER_TOPIC;
 
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 
-	@Autowired
-	private UserService userService;
+	private final UserService userService;
 
-	@Autowired
-	private KafkaTemplate<String, String> kafkaTemplate;
+	private final KafkaTemplate<String, String> kafkaTemplate;
 
-	@Autowired
-	private ObjectMapper objectMapper;
+	private final KafkaResponseParser kafkaResponseParser;
+
+	public RecommendationServiceImpl(
+			@Autowired UserRepository userRepository,
+			@Autowired UserService userService,
+			@Autowired KafkaTemplate<String, String> kafkaTemplate,
+			@Autowired KafkaResponseParser kafkaResponseParser,
+
+			@Value("${spring.kafka.recommendation.request-topic}")
+			String topic
+	) {
+		this.userRepository = userRepository;
+		this.userService = userService;
+		this.kafkaTemplate = kafkaTemplate;
+		this.kafkaResponseParser = kafkaResponseParser;
+		this.RECOMMENDATION_PRODUCER_TOPIC = topic;
+	}
 
 	@Override
 	public List<User> getRecommendedUsers() {
@@ -74,10 +70,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 				.map(User::getId)
 				.collect(Collectors.toSet());
 
-		String requestId = UUID.randomUUID().toString();
-		CompletableFuture<List<UUID>> futureResponse = new CompletableFuture<>();
+		Pair<String, CompletableFuture<List<UUID>>> request = createCompletableFuturePair();
 
-		pendingRequests.put(requestId, futureResponse);
+		String requestId = request.a;
+		CompletableFuture<List<UUID>> futureResponse = request.b;
 
 		try {
 			kafkaTemplate.send(
@@ -90,9 +86,21 @@ public class RecommendationServiceImpl implements RecommendationService {
 			throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, error.getMessage());
 		}
 
-		try {
-			List<UUID> response = futureResponse.get(5, TimeUnit.SECONDS);
+		return getUsersFromTask(futureResponse, friendIds, requestId);
+	}
 
+	private Pair<String, CompletableFuture<List<UUID>>> createCompletableFuturePair() {
+		String requestId = UUID.randomUUID().toString();
+		CompletableFuture<List<UUID>> futureResponse = new CompletableFuture<>();
+
+		pendingRequests.put(requestId, futureResponse);
+
+		return new Pair<>(requestId, futureResponse);
+	}
+
+	private List<User> getUsersFromTask(CompletableFuture<List<UUID>> future, Set<UUID> friendIds, String requestId) {
+		try {
+			List<UUID> response = future.get(KAFKA_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 			List<UUID> potentialFriends = response.stream()
 					.filter(id -> !friendIds.contains(id))
 					.toList();
@@ -132,34 +140,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 		}
 
 		log.error("handleRecommendationError[1]: payload: {}", payload);
-		CompletableFuture<List<UUID>> futureResponse = pendingRequests.get(messageKey);
+		KafkaResponseException exception = kafkaResponseParser.parseException(payload);
 
-		KafkaResponseException exception = parseKafkaResponseException(payload);
-
-		if (futureResponse != null) {
-			futureResponse.completeExceptionally(exception);
-		}
-	}
-
-	private KafkaResponseException parseKafkaResponseException(String json) {
-		try {
-			String cleanJson = json.trim();
-			if (cleanJson.startsWith("\"") && cleanJson.endsWith("\"")) {
-				cleanJson = cleanJson.substring(1, cleanJson.length() - 1);
-			}
-
-			cleanJson = cleanJson.replace("\\\"", "\"");
-
-			JsonNode root = objectMapper.readTree(cleanJson);
-			return new KafkaResponseException(
-					root.path("error_type").asText(),
-					root.path("status_code").asInt(),
-					root.path("detail").asText()
-			);
-		} catch (JsonProcessingException e) {
-			log.error("Failed to parse error JSON. Original: {}. Error: {}", json, e.getMessage());
-			throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid error format: " + e.getMessage());
-		}
+		Optional.ofNullable(pendingRequests.get(messageKey))
+				.ifPresent(future -> future.completeExceptionally(exception));
 	}
 
 	@KafkaListener(
@@ -172,30 +156,12 @@ public class RecommendationServiceImpl implements RecommendationService {
 	) {
 		log.debug("handleRecommendationResponse[1]: payload: {}", payload);
 
-		CompletableFuture<List<UUID>> future = pendingRequests.get(messageKey);
+		Optional.ofNullable(pendingRequests.get(messageKey))
+				.ifPresent(future -> {
+							List<UUID> parsedList = kafkaResponseParser.parseList(payload, UUID.class);
 
-		if (future != null) {
-			List<UUID> parsedList = parseJsonToUuidList(payload);
-
-			future.complete(parsedList);
-		}
-
-	}
-
-	private List<UUID> parseJsonToUuidList(String json) {
-		try {
-			log.debug("parseJsonToUuidList[1]: json: {}", json);
-
-			String innerJson = objectMapper.readValue(json, String.class);
-			CollectionType collectionType = objectMapper
-					.getTypeFactory()
-					.constructCollectionType(List.class, UUID.class);
-
-			return objectMapper.readValue(innerJson, collectionType);
-		} catch (JsonProcessingException e) {
-			log.error("parseJsonToUuidList[1]: error: {}", e.getMessage());
-			return List.of();
-		}
+							future.complete(parsedList);
+						}
+				);
 	}
 }
-

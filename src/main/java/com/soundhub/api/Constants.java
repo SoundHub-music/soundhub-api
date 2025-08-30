@@ -72,4 +72,5 @@ public class Constants {
 	public static final String USER_RECOMMENDATION_REQUEST_TOPIC = "user-recommendation-request";
 	public static final String USER_RECOMMENDATION_RESPONSE_TOPIC = "user-recommendation-response";
 	public static final String USER_RECOMMENDATION_GROUP_ID = "user-recommendation-group";
+	public static final int KAFKA_REQUEST_TIMEOUT_SECONDS = 5;
 }
